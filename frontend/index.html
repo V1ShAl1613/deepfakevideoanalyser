@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Amingo Video Forensics — AI-powered deepfake detection. Upload a video and analyze it for signs of facial manipulation." />
+
+  <title>Amingo Video Forensics</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- ── Header ── -->
+    <header class="app-header">
+      <div class="app-logo">🎬</div>
+      <h1 class="app-title">Amingo Video Forensics</h1>
+      <p class="app-subtitle">AI-powered deepfake detection for video content</p>
+      <div class="status-badge" id="statusBadge">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connecting…</span>
+      </div>
+    </header>
+
+    <!-- ── Info Banner ── -->
+    <div class="info-banner">
+      <span class="icon">ℹ️</span>
+      <span>This version detects facial deepfakes. It does not establish whether every fully AI-generated scene is fake.</span>
+    </div>
+
+    <!-- ── Upload Card ── -->
+    <div class="upload-card">
+      <div class="card-header">
+        <h2>Upload a Video</h2>
+        <p>Supports MP4, MOV, and WebM formats</p>
+      </div>
+      <div class="card-body">
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-icon">📁</div>
+          <div class="drop-zone-text">Drop your video here or click to browse</div>
+          <div class="drop-zone-hint">Maximum recommended size: 200 MB</div>
+          <input type="file" id="fileInput" accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm" />
+        </div>
+
+        <!-- Video preview (hidden by default) -->
+        <div id="previewArea" style="display: none;">
+          <div class="video-preview-wrapper">
+            <video id="videoPreview" controls></video>
+          </div>
+          <div class="file-info">
+            <span class="file-name" id="fileName">
+              <span>🎥</span>
+              <span id="fileNameText"></span>
+            </span>
+            <button class="btn-remove" id="btnRemove">✕ Remove</button>
+          </div>
+        </div>
+
+        <button class="btn-analyze" id="btnAnalyze" disabled>
+          <span id="btnLabel">🔍 Analyze Video</span>
+        </button>
+
+        <!-- Error display -->
+        <div class="error-banner" id="errorBanner" style="display: none;">
+          <span>⚠️</span>
+          <span id="errorText"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Results Section (populated by JS) ── -->
+    <div id="resultsSection"></div>
+
+    <!-- ── Footer ── -->
+    <footer class="app-footer">
+      <p>Powered by <span class="brand">Amingo</span> · All rights reserved</p>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

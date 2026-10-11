@@ -1,0 +1,265 @@
+"""
+Amingo Video Forensics — FastAPI Backend
+Handles video upload, frame extraction, and VideoMAE inference.
+"""
+
+import os
+import io
+import base64
+import tempfile
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from PIL import Image
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from transformers import (
+    VideoMAEForVideoClassification,
+    VideoMAEImageProcessor,
+)
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+MODEL_ID = str(
+    Path(__file__).resolve().parent / "models" / "videomae"
+)
+NUM_FRAMES = 16
+
+# ---------------------------------------------------------------------------
+# App setup
+# ---------------------------------------------------------------------------
+
+app = FastAPI(
+    title="Amingo Video Forensics",
+    description="Deepfake detection API powered by Amingo",
+    version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------------------------------------------------------------------------
+# Model loading (singleton)
+# ---------------------------------------------------------------------------
+
+_model_cache: dict = {}
+
+
+def get_model():
+    """Load model, processor, and device once and cache them."""
+    if not _model_cache:
+        device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
+
+        processor = VideoMAEImageProcessor.from_pretrained(
+            MODEL_ID,
+            local_files_only=True,
+        )
+
+        model = VideoMAEForVideoClassification.from_pretrained(
+            MODEL_ID,
+            local_files_only=True,
+        )
+
+        model = model.to(device)
+        model.eval()
+
+        _model_cache["processor"] = processor
+        _model_cache["model"] = model
+        _model_cache["device"] = device
+
+    return (
+        _model_cache["processor"],
+        _model_cache["model"],
+        _model_cache["device"],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Video processing helpers
+# ---------------------------------------------------------------------------
+
+
+def extract_frames(video_path: str) -> list[Image.Image]:
+    """Extract NUM_FRAMES evenly spaced frames from a video file."""
+    cap = cv2.VideoCapture(video_path)
+
+    try:
+        if not cap.isOpened():
+            raise ValueError(
+                "Could not open this video. Try an MP4 file."
+            )
+
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        if total < 1:
+            raise ValueError("The video contains no readable frames.")
+
+        # Select 16 evenly spaced frame positions.
+        indices = np.linspace(
+            0, total - 1, NUM_FRAMES
+        ).astype(int)
+
+        frames: list[Image.Image] = []
+
+        for index in indices:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(index))
+            ok, frame = cap.read()
+
+            if not ok:
+                continue
+
+            # OpenCV uses BGR; the model expects RGB.
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(Image.fromarray(frame))
+
+        if not frames:
+            raise ValueError("Could not extract video frames.")
+
+        # Repeat frames if the clip was too short to provide 16.
+        while len(frames) < NUM_FRAMES:
+            frames.append(frames[-1])
+
+        return frames[:NUM_FRAMES]
+
+    finally:
+        cap.release()
+
+
+def frames_to_base64(frames: list[Image.Image]) -> list[str]:
+    """Convert PIL frames to base64-encoded JPEG strings."""
+    encoded = []
+    for frame in frames:
+        buf = io.BytesIO()
+        frame.save(buf, format="JPEG", quality=80)
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        encoded.append(f"data:image/jpeg;base64,{b64}")
+    return encoded
+
+
+# ---------------------------------------------------------------------------
+# API routes
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/health")
+async def health_check():
+    """Server health and device info."""
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return {
+        "status": "ok",
+        "device": device,
+        "model_path": MODEL_ID,
+        "model_ready": bool(_model_cache),
+    }
+
+
+@app.post("/api/analyze")
+async def analyze_video(file: UploadFile = File(...)):
+    """Upload a video and get deepfake classification results."""
+
+    # Validate file type
+    allowed = {".mp4", ".mov", ".webm"}
+    ext = os.path.splitext(file.filename or "video.mp4")[1].lower()
+    if ext not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Use MP4, MOV, or WebM.",
+        )
+
+    temp_path = None
+
+    try:
+        # Save uploaded file to a temp location
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=ext
+        ) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            temp_path = tmp.name
+
+        # Load model and run inference
+        processor, model, device = get_model()
+        frames = extract_frames(temp_path)
+
+        inputs = processor(frames, return_tensors="pt")
+        inputs = {
+            key: value.to(device)
+            for key, value in inputs.items()
+        }
+
+        with torch.inference_mode():
+            outputs = model(**inputs)
+            probabilities = torch.softmax(
+                outputs.logits, dim=-1
+            )[0]
+
+        # Build results
+        results = []
+        for index, score in enumerate(probabilities.tolist()):
+            label = model.config.id2label.get(
+                index, f"Class {index}"
+            )
+            results.append({
+                "label": str(label),
+                "score": round(float(score), 4),
+            })
+
+        results.sort(
+            key=lambda item: item["score"],
+            reverse=True,
+        )
+
+        # Encode sampled frames as base64 for the frontend
+        frame_images = frames_to_base64(frames)
+
+        return {
+            "results": results,
+            "frames": frame_images,
+            "device": str(device),
+            "frames_sampled": len(frames),
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}",
+        )
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
+
+
+# ---------------------------------------------------------------------------
+# Serve frontend
+# ---------------------------------------------------------------------------
+
+FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
+
+app.mount(
+    "/static",
+    StaticFiles(directory=str(FRONTEND_DIR)),
+    name="static",
+)
+
+
+@app.get("/")
+async def serve_frontend():
+    """Serve the main HTML page."""
+    return FileResponse(str(FRONTEND_DIR / "index.html"))
