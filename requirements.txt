@@ -1,0 +1,18 @@
+# Amingo Video Forensics Dependencies
+# Core Deep Learning & Transformer Inference
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.30.0
+
+# Backend Web Server & API
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+python-multipart>=0.0.6
+
+# Computer Vision & Image Processing
+opencv-python>=4.8.0
+pillow>=9.5.0
+numpy>=1.24.0
+
+# Optional Streamlit Interface
+streamlit>=1.25.0
