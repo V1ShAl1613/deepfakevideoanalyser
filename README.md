@@ -75,17 +75,6 @@ Once started, open your web browser and navigate to:
 
 ---
 
-## 🖥️ Alternative: Streamlit Interface
-
-If you prefer to run the legacy Streamlit dashboard:
-
-```bash
-python -m streamlit run app.py
-```
-And access it at **`http://localhost:8501`**.
-
----
-
 ## 📂 Project Structure
 
 ```text
@@ -100,8 +89,7 @@ video-forensics/
 │       ├── preprocessor_config.json # 16-frame preprocessor configuration
 │       ├── README.md         # Detailed Amingo model card & specifications
 │       └── model.safetensors # Fine-tuned weights (local)
-├── app.py                    # Streamlit application
-├── server.py                 # FastAPI backend server
+├── server.py                 # FastAPI backend & inference server
 ├── test_model.py             # Quick model load & sanity verification script
 ├── requirements.txt          # Python dependencies
 └── README.md                 # Project documentation

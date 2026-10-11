@@ -101,7 +101,7 @@ processor = VideoMAEImageProcessor.from_pretrained(
     MODEL_PATH, local_files_only=True
 )
 
-# See app.py for full video analysis pipeline
+# See server.py for full video analysis pipeline
 ```
 
 ## 🧩 Intended Use
