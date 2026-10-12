@@ -1,126 +1,363 @@
-# 🎬 Amingo Video Forensics
+# 🎬 Amingo Video Forensics — Deepfake Video Analyser
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-CUDA%20Accelerated-ee4c2c.svg)](https://pytorch.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg)](https://fastapi.tiangolo.com/)
-[![License](https://img.shields.io/badge/License-Proprietary%20Amingo-indigo.svg)](#-license)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-CUDA%20%7C%20CPU-EE4C2C.svg?style=flat&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Transformers](https://img.shields.io/badge/HuggingFace-Transformers%20VideoMAE-FFD21E.svg?style=flat&logo=huggingface&logoColor=black)](https://huggingface.co/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8.svg?style=flat&logo=opencv&logoColor=white)](https://opencv.org/)
+[![License](https://img.shields.io/badge/License-Proprietary%20Amingo-6366F1.svg?style=flat)](#-license--intellectual-property)
 
-**Amingo Video Forensics** is an AI-powered media verification and deepfake detection platform. Built on the **VideoMAE** (Video Masked Autoencoder) architecture, it analyzes both spatial facial features and cross-frame temporal motion dynamics to detect subtle manipulation signatures, facial reenactments, and deepfakes.
-
----
-
-## ✨ Features
-
-- **🧠 Spatio-Temporal VideoMAE Model**: Simultaneously evaluates 16 uniformly sampled frames across time to catch temporal glitches, blinking irregularities, and face warping.
-- **⚡ Local GPU & CPU Acceleration**: Automatically utilizes NVIDIA CUDA when available with fallback to multi-threaded CPU.
-- **🎨 Modern Glassmorphic Web Interface**: Standalone frontend featuring drag-and-drop video uploads, real-time video playback previews, animated confidence meters, and sampled frame galleries.
-- **🚀 High-Performance FastAPI Backend**: REST API with asynchronous video handling and OpenCV timeline sampling.
-- **🔒 100% Offline & Private Inference**: Runs strictly locally without sending video data to any external cloud service.
+**Amingo Video Forensics** is an enterprise-grade AI media verification platform engineered to detect facial deepfakes, AI reenactments, and temporal video manipulations. Powered by a specialized **VideoMAE (Video Masked Autoencoder)** vision transformer fine-tuned on the **FaceForensics++** benchmark, the system inspects both spatial facial structures and cross-frame temporal motion signatures to uncover synthetic artifacts invisible to single-frame image detectors.
 
 ---
 
-## 🛠️ System Requirements
+## 📑 Table of Contents
 
-- **Operating System**: Windows 10/11, macOS, or Linux
-- **Python**: Version 3.10 or higher
-- **GPU (Recommended)**: NVIDIA GPU with CUDA support for accelerated inference (CPU is also supported)
+1. [System Overview & Architecture](#-system-overview--architecture)
+2. [Key Features](#-key-features)
+3. [End-to-End Pipeline Workflow](#-end-to-end-pipeline-workflow)
+4. [Project Structure](#-project-structure)
+5. [Prerequisites & System Requirements](#-prerequisites--system-requirements)
+6. [Complete Installation & Setup Guide](#-complete-installation--setup-guide)
+7. [Running the Application](#-running-the-application)
+8. [Testing & Verification](#-testing--verification)
+9. [REST API Reference & Examples](#-rest-api-reference--examples)
+10. [Model Architecture & Specifications](#-model-architecture--specifications)
+11. [Troubleshooting & Common Issues](#-troubleshooting--common-issues)
+12. [License & Intellectual Property](#-license--intellectual-property)
 
 ---
 
-## 🚀 Quick Start Guide
+## 🧠 System Overview & Architecture
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/V1ShAl1613/deepfakevideoanalyser.git
-cd deepfakevideoanalyser
+Standard deepfake detectors evaluate isolated individual video frames. This creates high vulnerability to false positives and misses temporal inconsistencies like flickering, warped facial contours between frames, blinking glitches, and boundary blending jitter.
+
+**Amingo Video Forensics** resolves this through **spatiotemporal self-attention**:
+- **Temporal Dynamics**: Simultaneously ingests a 16-frame temporal tubelet representation across the video duration.
+- **Deep Feature Representation**: Leverages 12 transformer encoder layers with 12 attention heads each, extracting 768-dimensional latent representations.
+- **Strict Privacy**: Entirely self-contained. Executes 100% offline with zero cloud telemetry or third-party data egress.
+
 ```
-
-### 2. One-Command Installation
-Install all required dependencies with a single command:
-
-```bash
-pip install -r requirements.txt
-```
-
-> **Tip for CUDA (NVIDIA GPU)**: If you want GPU acceleration, ensure you have PyTorch installed with CUDA:
-> ```bash
-> pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-> ```
-
----
-
-### 3. Model Weights Setup
-Ensure the model weights file (`model.safetensors`) is placed inside the `models/videomae/` directory:
-
-```text
-models/videomae/
-├── config.json
-├── preprocessor_config.json
-├── README.md
-└── model.safetensors    <-- Place your trained model weights here (~328 MB)
+┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
+│  User Video     │ ───►  │  FastAPI REST Server │ ───►  │  OpenCV Timeline       │
+│  (MP4/MOV/WebM) │       │  (Port 8000)         │       │  Frame Extraction (16) │
+└─────────────────┘       └──────────────────────┘       └───────────┬────────────┘
+                                                                     │
+┌─────────────────────────┐       ┌────────────────────────┐         │
+│  Interactive Glassmorphic│ ◄───  │  Softmax Probabilities │ ◄───────┘
+│  Forensic Report UI     │       │  & VideoMAE Classifier │
+└─────────────────────────┘       └────────────────────────┘
 ```
 
 ---
 
-### 4. Run the Application
+## ✨ Key Features
 
-Start the local web server with:
+- **🧠 Spatiotemporal VideoMAE Classifier**: Fine-tuned on the FaceForensics++ benchmark (C23 compression) to detect deepfake synthesis and facial reenactment.
+- **⚡ Dual Hardware Acceleration**: Automatically detects NVIDIA CUDA GPUs; seamlessly falls back to optimized multi-threaded CPU execution if a GPU is absent.
+- **🎨 Glassmorphic Dark-Mode Interface**:
+  - Drag-and-drop video upload with file validation.
+  - In-browser instant video preview player with custom controls.
+  - Dynamic Real vs. Fake confidence progress meters.
+  - Interactive gallery of the 16 sampled frames extracted across the video timeline.
+- **🚀 High-Performance Asynchronous Backend**: FastAPI REST backend handling multipart streams and memory-efficient temporary file processing.
+- **🔒 Zero Cloud Ingestion (Air-Gapped Ready)**: Operates entirely locally on your host machine or private cloud.
 
-```bash
-python -m uvicorn server:app --host 127.0.0.1 --port 8080 --reload
+---
+
+## 🔄 End-to-End Pipeline Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Web Frontend (HTML/JS)
+    participant API as FastAPI Backend (server.py)
+    participant CV as OpenCV Video Engine
+    participant Model as VideoMAE Model & Preprocessor
+
+    User->>UI: Selects or drops video (MP4/MOV/WebM)
+    UI->>UI: Renders instant local video preview player
+    User->>UI: Clicks "Run Forensic Analysis"
+    UI->>API: POST /api/analyze (multipart/form-data)
+    API->>API: Validates extension and writes to temp storage
+    API->>CV: extract_frames(video_path)
+    CV-->>API: Returns 16 uniformly sampled RGB frames
+    API->>Model: get_model() (singleton lazy loader)
+    API->>Model: Preprocess frames (normalize & resize to 224x224)
+    Model->>Model: Forward pass with torch.inference_mode()
+    Model-->>API: Softmax logits (probabilities: Real vs Fake)
+    API->>API: Convert frames to base64 JPEG previews
+    API->>API: Purge temporary video file
+    API-->>UI: 200 OK JSON (scores, verdict, base64 thumbnails)
+    UI->>UI: Render Forensic Verdict, Confidence Bars & Frame Gallery
 ```
-
-Once started, open your web browser and navigate to:
-👉 **[http://127.0.0.1:8080](http://127.0.0.1:8080)**
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-video-forensics/
-├── frontend/
-│   ├── index.html            # Semantic HTML5 web interface
-│   ├── style.css             # Glassmorphic dark-mode styles & animations
-│   └── app.js                # Interactive UI controller & API connector
+deepfakevideoanalyser/
+├── .venv/                      # Python virtual environment (pre-configured)
+├── frontend/                   # Client-side web interface
+│   ├── index.html              # Semantic HTML5 glassmorphic structure
+│   ├── style.css               # Dark-mode styling, animations, confidence meters
+│   └── app.js                  # Frontend controller, API bridge, UI state management
 ├── models/
-│   └── videomae/
-│       ├── config.json       # VideoMAE model configuration
-│       ├── preprocessor_config.json # 16-frame preprocessor configuration
-│       ├── README.md         # Detailed Amingo model card & specifications
-│       └── model.safetensors # Fine-tuned weights (local)
-├── server.py                 # FastAPI backend & inference server
-├── test_model.py             # Quick model load & sanity verification script
-├── requirements.txt          # Python dependencies
-└── README.md                 # Project documentation
+│   └── videomae/               # Trained model package
+│       ├── config.json         # VideoMAE architecture parameters & id2label mapping
+│       ├── preprocessor_config.json # 16-frame spatial preprocessor parameters
+│       ├── model.safetensors   # Fine-tuned model weights (~328 MB)
+│       └── README.md           # Detailed model card & training benchmarks
+├── server.py                   # FastAPI REST backend & inference runner
+├── test_model.py               # Standalone model load & sanity verification script
+├── requirements.txt            # Python package dependencies
+├── .gitignore                  # Git ignore rules
+└── README.md                   # End-to-end project documentation
+```
+
+### Key Components
+
+- **[`server.py`](server.py)**: Initializes FastAPI, mounts `/static` for frontend assets, routes `/api/health` and `/api/analyze`, manages model caching, runs OpenCV frame sampling, and executes PyTorch inference.
+- **[`models/videomae/`](models/videomae/)**: Contains the complete self-contained VideoMAE model weights (`model.safetensors`) and Hugging Face configuration files.
+- **[`frontend/app.js`](frontend/app.js)**: Handles client-side drag-and-drop, validates file size (up to 250MB), issues async fetch calls to `/api/analyze`, and renders the interactive forensic report.
+- **[`test_model.py`](test_model.py)**: Standalone diagnostic utility to verify model load time, weight integrity, and compute device without launching the web server.
+
+---
+
+## 🛠️ Prerequisites & System Requirements
+
+### Minimum Requirements
+- **Operating System**: Windows 10/11, macOS 12+, or Linux (Ubuntu 20.04+)
+- **Python**: Version 3.10, 3.11, 3.12, or 3.13
+- **Memory (RAM)**: 4 GB minimum (8 GB recommended)
+- **Disk Space**: ~1.5 GB free space (including model weights and environment)
+
+### GPU Acceleration (Optional, Recommended for Fast Inference)
+- **GPU**: NVIDIA GPU with Compute Capability 6.0+ (GTX 1060 or newer, RTX series)
+- **CUDA**: CUDA 11.8 or 12.1+ with matching PyTorch build
+
+---
+
+## 🚀 Complete Installation & Setup Guide
+
+### 1. Clone or Open the Repository
+```bash
+cd f:\05.Client_project\deepfakevideoanalyser
+```
+
+### 2. Set Up a Python Virtual Environment
+
+#### Windows (PowerShell):
+```powershell
+# Create virtual environment (if not already created)
+python -m venv .venv
+
+# Activate virtual environment
+.\.venv\Scripts\Activate.ps1
+```
+
+#### Windows (Command Prompt):
+```cmd
+.venv\Scripts\activate.bat
+```
+
+#### macOS / Linux:
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install Required Dependencies
+
+Install the core application requirements:
+```bash
+pip install -r requirements.txt
+```
+
+> **⚡ NVIDIA CUDA GPU Acceleration**:
+> To enable hardware GPU acceleration on Windows or Linux with an NVIDIA GPU, install the CUDA-enabled PyTorch build:
+> ```bash
+> pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+> ```
+
+### 4. Verify Model Weights
+Confirm that `model.safetensors` exists in `models/videomae/`:
+```text
+models/videomae/
+├── config.json
+├── preprocessor_config.json
+├── README.md
+└── model.safetensors    # ~328 MB
 ```
 
 ---
 
-## 🔌 API Endpoints
+## 🧪 Testing & Verification
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Serves the interactive frontend web application |
-| `GET` | `/api/health` | Returns server health status, active compute device (`cuda` or `cpu`), and model state |
-| `POST` | `/api/analyze` | Accepts video upload (`multipart/form-data`), samples 16 frames, runs VideoMAE classification, and returns JSON scores |
+Before starting the web server, run the sanity verification script to ensure PyTorch and Transformers can load the model weights cleanly:
 
-### Sample Analysis Response
-```json
-{
-  "results": [
-    { "label": "Real", "score": 0.683 },
-    { "label": "Fake", "score": 0.317 }
-  ],
-  "frames": ["data:image/jpeg;base64,..."],
-  "device": "cuda",
-  "frames_sampled": 16
-}
+```powershell
+.\.venv\Scripts\python.exe test_model.py
 ```
+
+Expected output:
+```text
+Loading processor...
+Loading model...
+Model loaded successfully!
+Device: cpu (or cuda)
+Labels: {0: 'real', 1: 'fake'}
+```
+
+---
+
+## 🏃 Running the Application
+
+### Quick Start Command
+
+Start the local web server with Uvicorn:
+
+#### PowerShell:
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+```
+
+#### Command Prompt (or with active `.venv`):
+```cmd
+uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+```
+
+### Accessing the Web Interface
+Once started, open your web browser and navigate to:
+👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+
+---
+
+## 🔌 REST API Reference & Examples
+
+### 1. Health & Compute Device Check
+Checks server health, active compute hardware (`cuda` or `cpu`), and model status.
+
+- **Endpoint**: `GET /api/health`
+- **cURL Request**:
+  ```bash
+  curl -X GET http://127.0.0.1:8000/api/health
+  ```
+- **Response (`200 OK`)**:
+  ```json
+  {
+    "status": "ok",
+    "device": "cpu",
+    "model_path": "F:\\05.Client_project\\deepfakevideoanalyser\\models\\videomae",
+    "model_ready": true
+  }
+  ```
+
+---
+
+### 2. Video Forensic Analysis
+Uploads a video file, extracts 16 evenly spaced timeline frames, runs VideoMAE classification, and returns forensic confidence scores and sampled thumbnails.
+
+- **Endpoint**: `POST /api/analyze`
+- **Content-Type**: `multipart/form-data`
+- **Supported Formats**: `.mp4`, `.mov`, `.webm` (up to 250 MB)
+- **cURL Request**:
+  ```bash
+  curl -X POST "http://127.0.0.1:8000/api/analyze" \
+       -H "accept: application/json" \
+       -H "Content-Type: multipart/form-data" \
+       -F "file=@path/to/sample_video.mp4"
+  ```
+- **Response (`200 OK`)**:
+  ```json
+  {
+    "results": [
+      { "label": "real", "score": 0.8924 },
+      { "label": "fake", "score": 0.1076 }
+    ],
+    "frames": [
+      "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+      "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+    ],
+    "device": "cpu",
+    "frames_sampled": 16
+  }
+  ```
+
+---
+
+### 3. Python Integration Example
+Run video classification directly from an external Python script:
+
+```python
+import requests
+
+url = "http://127.0.0.1:8000/api/analyze"
+video_path = "sample_test.mp4"
+
+with open(video_path, "rb") as f:
+    files = {"file": (video_path, f, "video/mp4")}
+    response = requests.post(url, files=files)
+
+data = response.json()
+print("Top Verdict:", data["results"][0]["label"].upper())
+print("Confidence:", f"{data['results'][0]['score'] * 100:.2f}%")
+print("Compute Device:", data["device"])
+```
+
+---
+
+## 📊 Model Architecture & Specifications
+
+| Parameter | Specification |
+|---|---|
+| **Base Architecture** | `VideoMAEForVideoClassification` (Vision Masked Autoencoder) |
+| **Input Shape** | 16 frames × 3 channels × 224 height × 224 width |
+| **Patch Size & Tubelet** | 16 × 16 spatial patches, 2-frame tubelet size |
+| **Hidden Layers** | 12 Transformer Encoder layers |
+| **Attention Heads** | 12 heads (Hidden size: 768) |
+| **Training Benchmark** | FaceForensics++ (C23 compression) |
+| **Training Infrastructure** | Amingo In-House High-End GPU Workstation |
+| **Evaluation Accuracy** | **88.0%** |
+| **Evaluation F1-Score** | **0.742** |
+| **Evaluation AUC** | **0.836** |
+| **Weights Size** | ~328 MB (`model.safetensors`) |
+
+---
+
+## ❓ Troubleshooting & Common Issues
+
+### 1. `[WinError 10013] an attempt was made to access a socket in a way forbidden by its access permissions`
+- **Cause**: On Windows machines, port `8080` is frequently claimed by system services (such as `AgentService.exe`), Windows NAT, or Hyper-V reserved port ranges.
+- **Solution**: Use port `8000` (or another free port like `8001`, `8088`):
+  ```powershell
+  .\.venv\Scripts\python.exe -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+  ```
+
+### 2. `Could not open this video. Try an MP4 file.`
+- **Cause**: The uploaded video is corrupt, empty, or encoded in a codec unsupported by the local OpenCV backend.
+- **Solution**: Convert the video to standard H.264/AAC MP4:
+  ```bash
+  ffmpeg -i input_video.mov -vcodec libx264 -acodec aac fixed_video.mp4
+  ```
+
+### 3. Server runs on `CPU` instead of `CUDA`
+- **Cause**: PyTorch was installed without CUDA support or NVIDIA drivers are missing.
+- **Check**: Run `python -c "import torch; print(torch.cuda.is_available())"`. If `False`, reinstall PyTorch with CUDA:
+  ```powershell
+  pip install --force-reinstall torch torchvision --index-url https://download.pytorch.org/whl/cu121
+  ```
+
+### 4. `File exceeds 250MB size limit`
+- **Cause**: The client interface limits video uploads to 250MB for responsive local analysis.
+- **Solution**: Trim the clip to a 5–30 second segment before uploading. Because the engine samples 16 uniform frames across the clip timeline, a 10-second segment provides high forensic coverage.
 
 ---
 
 ## 📜 License & Intellectual Property
 
-This project and model implementation are proprietary and developed under **Amingo**. All rights reserved.
-Unauthorized duplication, distribution, or commercial reuse without explicit permission is prohibited.
+This project, source code, and fine-tuned model weights are proprietary and developed under **Amingo**. All rights reserved.
+
+- **Model Delivery**: Shipped as optimized inference weights (`model.safetensors`). Raw benchmark datasets (100+ GB) remain private to protect Amingo proprietary training pipelines.
+- **Usage**: Unauthorized duplication, external distribution, or commercial reuse without explicit authorization is strictly prohibited.
