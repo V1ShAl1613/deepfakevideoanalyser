@@ -1,5 +1,5 @@
 /**
- * Amingo Video Forensics — Application Controller & Engine Bridge
+ * Deepfake Video Forensics — Application Controller & Engine Bridge
  * Manages video ingestion, client-side metadata parsing, asynchronous API requests,
  * spatiotemporal results interpretation, frame lightbox, and theme persistence.
  */
@@ -70,12 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '🛡️';
-    if (type === 'error') icon = '⚠️';
+    let iconSvg = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>';
+    if (type === 'success') {
+      iconSvg = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
+    } else if (type === 'error') {
+      iconSvg = '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>';
+    }
 
     toast.innerHTML = `
-      <span class="toast-icon">${icon}</span>
+      <span class="toast-icon" aria-hidden="true">${iconSvg}</span>
       <span class="toast-message">${escapeHtml(message)}</span>
     `;
 
@@ -96,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── 3. Theme Management ──
   function initTheme() {
-    const savedTheme = localStorage.getItem('amingo_forensics_theme');
+    const savedTheme = localStorage.getItem('deepfake_forensics_theme') || localStorage.getItem('amingo_forensics_theme');
     const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
 
@@ -108,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
     document.documentElement.setAttribute('data-theme', nextTheme);
-    localStorage.setItem('amingo_forensics_theme', nextTheme);
+    localStorage.setItem('deepfake_forensics_theme', nextTheme);
     showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} theme`, 'info', 2000);
   }
 
@@ -411,7 +414,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Styling & Copy
     const verdictClass = isAuthentic ? 'verdict-real' : 'verdict-fake';
-    const verdictIcon = isAuthentic ? '🛡️' : '⚠️';
+    const verdictIconSvg = isAuthentic
+      ? `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zm3.707 6.349a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`
+      : `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
     const verdictTitle = isAuthentic ? 'AUTHENTIC MEDIA' : 'MANIPULATED MEDIA (DEEPFAKE)';
     const verdictSummary = isAuthentic
       ? `The VideoMAE spatio-temporal self-attention backbone found continuous temporal facial alignment and detected no significant deepfake manipulation signatures across the sampled duration (${realPercent}% authenticity confidence).`
@@ -444,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
     activeResultsView.innerHTML = `
       <!-- 1. Verdict Banner -->
       <div class="verdict-banner-card ${verdictClass}" role="region" aria-label="Forensic Classification Verdict">
-        <div class="verdict-icon-container" aria-hidden="true">${verdictIcon}</div>
+        <div class="verdict-icon-container" aria-hidden="true">${verdictIconSvg}</div>
         <div class="verdict-text-content">
           <div class="verdict-classification-row">
             <h3 class="verdict-title">${verdictTitle}</h3>
@@ -552,7 +557,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <p class="frames-explanatory-note">
-          ℹ️ 16 frames uniformly extracted across video timeline. Scroll horizontally inside the container to inspect cross-frame transitions.
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+          <span>16 frames uniformly extracted across video timeline. Scroll horizontally inside the container to inspect cross-frame transitions.</span>
         </p>
       </div>
     `;
@@ -658,7 +664,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="dossier-specs-grid">
             <div class="dossier-spec-card">
-              <span class="dossier-spec-icon">🤖</span>
+              <span class="dossier-spec-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13 7H7v6h6V7z"/>
+                  <path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5v10h10V5H5z" clip-rule="evenodd"/>
+                </svg>
+              </span>
               <div class="dossier-spec-content">
                 <span class="dossier-spec-label">Forensic Model</span>
                 <span class="dossier-spec-value">VideoMAE</span>
@@ -666,7 +677,11 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <div class="dossier-spec-card">
-              <span class="dossier-spec-icon">🎯</span>
+              <span class="dossier-spec-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V5z" clip-rule="evenodd"/>
+                </svg>
+              </span>
               <div class="dossier-spec-content">
                 <span class="dossier-spec-label">Benchmark</span>
                 <span class="dossier-spec-value">FaceForensics++</span>
@@ -674,7 +689,11 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <div class="dossier-spec-card">
-              <span class="dossier-spec-icon">🎞️</span>
+              <span class="dossier-spec-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 0h1v2h-1V5zm1 4h-1v2h1V9zm-1 4h1v2h-1v-2zm-2 2H7v-4h6v4zm-8 0H4v-2h1v2zm-1-4h1V9H4v2zm1-4H4V5h1v2z" clip-rule="evenodd"/>
+                </svg>
+              </span>
               <div class="dossier-spec-content">
                 <span class="dossier-spec-label">Sampled Timeline</span>
                 <span class="dossier-spec-value">${framesCount} Frames</span>
@@ -682,7 +701,11 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <div class="dossier-spec-card">
-              <span class="dossier-spec-icon">🛡️</span>
+              <span class="dossier-spec-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35-.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </span>
               <div class="dossier-spec-content">
                 <span class="dossier-spec-label">Data Privacy</span>
                 <span class="dossier-spec-value">100% On-Device</span>
@@ -696,7 +719,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="dossier-advisory-grid">
           <div class="dossier-advisory-card">
             <div class="advisory-title-wrap">
-              <span class="advisory-icon">🎯</span>
+              <span class="advisory-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd"/>
+                </svg>
+              </span>
               <h5>What This Means</h5>
             </div>
             <p class="advisory-text">
@@ -708,7 +735,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="dossier-advisory-card">
             <div class="advisory-title-wrap">
-              <span class="advisory-icon">💡</span>
+              <span class="advisory-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 118 0h-4z"/>
+                </svg>
+              </span>
               <h5>Verification Guidance</h5>
             </div>
             <p class="advisory-text">

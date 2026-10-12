@@ -1,7 +1,7 @@
 {
-  "name": "amingo-video-forensics",
+  "name": "deepfake-video-forensics",
   "version": "1.0.0",
-  "description": "Amingo Video Forensics — AI-Powered Media Authenticity & Deepfake Video Analyser",
+  "description": "Deepfake Video Forensics — AI-Powered Media Authenticity & Deepfake Video Analyser",
   "type": "module",
   "scripts": {
     "dev": "vite",

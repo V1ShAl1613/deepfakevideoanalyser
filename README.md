@@ -1,13 +1,13 @@
-# 🎬 Amingo Video Forensics — Deepfake Video Analyser
+# Deepfake Video Forensics — Video Analyser
 
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-CUDA%20%7C%20CPU-EE4C2C.svg?style=flat&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Transformers](https://img.shields.io/badge/HuggingFace-Transformers%20VideoMAE-FFD21E.svg?style=flat&logo=huggingface&logoColor=black)](https://huggingface.co/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8.svg?style=flat&logo=opencv&logoColor=white)](https://opencv.org/)
-[![License](https://img.shields.io/badge/License-Proprietary%20Amingo-6366F1.svg?style=flat)](#-license--intellectual-property)
+[![License](https://img.shields.io/badge/License-Proprietary-6366F1.svg?style=flat)](#-license--intellectual-property)
 
-**Amingo Video Forensics** is an enterprise-grade AI media verification platform engineered to detect facial deepfakes, AI reenactments, and temporal video manipulations. Powered by a specialized **VideoMAE (Video Masked Autoencoder)** vision transformer fine-tuned on the **FaceForensics++** benchmark, the system inspects both spatial facial structures and cross-frame temporal motion signatures to uncover synthetic artifacts invisible to single-frame image detectors.
+**Deepfake Video Forensics** is an enterprise-grade AI media verification platform engineered to detect facial deepfakes, AI reenactments, and temporal video manipulations. Powered by a specialized **VideoMAE (Video Masked Autoencoder)** vision transformer fine-tuned on the **FaceForensics++** benchmark, the system inspects both spatial facial structures and cross-frame temporal motion signatures to uncover synthetic artifacts invisible to single-frame image detectors.
 
 ---
 
@@ -32,7 +32,7 @@
 
 Standard deepfake detectors evaluate isolated individual video frames. This creates high vulnerability to false positives and misses temporal inconsistencies like flickering, warped facial contours between frames, blinking glitches, and boundary blending jitter.
 
-**Amingo Video Forensics** resolves this through **spatiotemporal self-attention**:
+**Deepfake Video Forensics** resolves this through **spatiotemporal self-attention**:
 - **Temporal Dynamics**: Simultaneously ingests a 16-frame temporal tubelet representation across the video duration.
 - **Deep Feature Representation**: Leverages 12 transformer encoder layers with 12 attention heads each, extracting 768-dimensional latent representations.
 - **Strict Privacy**: Entirely self-contained. Executes 100% offline with zero cloud telemetry or third-party data egress.
@@ -357,7 +357,7 @@ print("Compute Device:", data["device"])
 
 ## 📜 License & Intellectual Property
 
-This project, source code, and fine-tuned model weights are proprietary and developed under **Amingo**. All rights reserved.
+This project, source code, and fine-tuned model weights are proprietary and developed under **Deepfake Video Forensics**. All rights reserved.
 
-- **Model Delivery**: Shipped as optimized inference weights (`model.safetensors`). Raw benchmark datasets (100+ GB) remain private to protect Amingo proprietary training pipelines.
+- **Model Delivery**: Shipped as optimized inference weights (`model.safetensors`). Raw benchmark datasets (100+ GB) remain private to protect proprietary training pipelines.
 - **Usage**: Unauthorized duplication, external distribution, or commercial reuse without explicit authorization is strictly prohibited.

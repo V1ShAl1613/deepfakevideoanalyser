@@ -1,5 +1,5 @@
 /**
- * Amingo Video Forensics — Complete Enterprise Design System
+ * Deepfake Video Forensics — Complete Enterprise Design System
  * Inspired by cybersecurity command centers, digital-media forensics workstations,
  * and high-contrast OKLCH glassmorphic visual language.
  */
@@ -1009,9 +1009,22 @@ body {
 }
 
 .bullet-icon {
-  font-size: 1.1rem;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+.bullet-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .feature-bullet strong {
@@ -1080,6 +1093,11 @@ body {
   justify-content: center;
   flex-shrink: 0;
   font-size: 1.6rem;
+}
+
+.verdict-icon-container svg {
+  width: 26px;
+  height: 26px;
 }
 
 .verdict-real .verdict-icon-container {
@@ -1761,6 +1779,16 @@ body {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.heading-svg {
+  width: 18px;
+  height: 18px;
+  color: var(--brand);
+  flex-shrink: 0;
 }
 
 .guide-section p {
@@ -1853,8 +1881,17 @@ body {
 }
 
 .toast-icon {
-  font-size: 1.1rem;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .toast-message {
@@ -2119,10 +2156,22 @@ body {
 }
 
 .dossier-spec-icon {
-  font-size: 1.25rem;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
   flex-shrink: 0;
   margin-top: 0.1rem;
+}
+
+.dossier-spec-icon svg {
+  width: 17px;
+  height: 17px;
 }
 
 .dossier-spec-content {
@@ -2176,6 +2225,21 @@ body {
   gap: 0.5rem;
 }
 
+.advisory-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.advisory-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 .advisory-title-wrap h5 {
   margin: 0;
   font-size: 0.875rem;
@@ -2188,6 +2252,22 @@ body {
   font-size: 0.825rem;
   line-height: 1.5;
   color: var(--text-muted);
+}
+
+.frames-explanatory-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+}
+
+.frames-explanatory-note svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--brand);
 }
 
 /* ── 18. App Footer ── */

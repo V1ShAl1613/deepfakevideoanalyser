@@ -1,5 +1,5 @@
 """
-Amingo Video Forensics — FastAPI Backend
+Deepfake Video Forensics — FastAPI Backend
 Handles video upload, frame extraction, and VideoMAE inference.
 """
 
@@ -36,8 +36,8 @@ NUM_FRAMES = 16
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title="Amingo Video Forensics",
-    description="Deepfake detection API powered by Amingo",
+    title="Deepfake Video Forensics",
+    description="Deepfake detection API powered by Deepfake Video Forensics",
     version="1.0.0",
 )
 
