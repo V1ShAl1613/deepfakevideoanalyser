@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/style.css?v=2.3.0" />
+  <link rel="stylesheet" href="/static/style.css?v=2.4.0" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f46e5'/><path d='M30 25 L75 50 L30 75 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='10' fill='%2310b981'/></svg>" />
 </head>
 <body>
@@ -235,21 +235,16 @@
           <!-- Empty State (Before analysis is run) -->
           <div class="empty-state-view" id="emptyStateView">
             <div class="empty-state-illustration" aria-hidden="true">
-              <div class="scan-reticle" style="width: 110px; height: 110px; max-width: 110px; max-height: 110px; min-width: 110px; min-height: 110px; position: relative;">
+              <div class="scan-reticle">
                 <div class="scan-beam"></div>
                 <div class="reticle-corner tl"></div>
                 <div class="reticle-corner tr"></div>
                 <div class="reticle-corner bl"></div>
                 <div class="reticle-corner br"></div>
-                <svg class="aperture-icon" width="48" height="48" style="width: 48px; height: 48px; max-width: 48px; max-height: 48px; display: block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="12" cy="12" r="10" stroke-opacity="0.3" />
-                  <line x1="14.31" y1="8" x2="20.05" y2="17.94" />
-                  <line x1="9.69" y1="8" x2="21.17" y2="8" />
-                  <line x1="7.38" y1="12" x2="13.12" y2="2.06" />
-                  <line x1="9.69" y1="16" x2="3.95" y2="6.06" />
-                  <line x1="14.31" y1="16" x2="2.83" y2="16" />
-                  <line x1="16.62" y1="12" x2="10.88" y2="21.94" />
-                </svg>
+                <div class="robo-scanner-wrap">
+                  <img src="/static/ai-robot.png" alt="AI Forensic Robot" class="robo-scanner-img" />
+                  <div class="robo-glow-ring"></div>
+                </div>
               </div>
             </div>
 
@@ -365,7 +360,9 @@
           <h3 class="modal-title" id="modalFrameTitle">Sampled Timeline Inspection</h3>
           <span class="modal-meta-time" id="modalFrameTime">Timestamp: 0.00s</span>
         </div>
-        <button type="button" class="btn-modal-close" id="btnCloseModal" aria-label="Close frame preview">✕</button>
+        <button type="button" class="btn-modal-close" id="btnCloseModal" aria-label="Close frame preview">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
       </div>
       <div class="modal-body frame-modal-body">
         <div class="frame-large-container">
@@ -394,7 +391,9 @@
           <span class="modal-badge">ARCHITECTURE & SPECS</span>
           <h3 class="modal-title" id="guideModalTitle">Deepfake Video Forensics Architecture</h3>
         </div>
-        <button type="button" class="btn-modal-close" id="btnCloseGuideModal" aria-label="Close specifications dialog">✕</button>
+        <button type="button" class="btn-modal-close" id="btnCloseGuideModal" aria-label="Close specifications dialog">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
       </div>
       <div class="modal-body guide-modal-body">
         <section class="guide-section">
@@ -471,6 +470,6 @@
   <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Interactive Application Controller -->
-  <script src="/static/app.js?v=2.3.0"></script>
+  <script src="/static/app.js?v=2.4.0"></script>
 </body>
 </html>

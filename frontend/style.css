@@ -923,15 +923,15 @@ body {
 
 .scan-reticle {
   position: relative;
-  width: 110px;
-  height: 110px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   border: 1px solid var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-surface);
-  box-shadow: 0 0 30px var(--brand-glow);
+  background: radial-gradient(circle, var(--bg-surface) 60%, var(--bg-subtle) 100%);
+  box-shadow: 0 0 35px var(--brand-glow), inset 0 0 20px rgba(14, 165, 233, 0.08);
 }
 
 .scan-beam {
@@ -943,18 +943,20 @@ body {
   background: linear-gradient(90deg, transparent, var(--forensic-cyan), transparent);
   box-shadow: 0 0 10px var(--forensic-cyan);
   animation: scan-vertical 2.8s ease-in-out infinite alternate;
+  z-index: 3;
 }
 
 @keyframes scan-vertical {
-  from { top: 10%; }
-  to { top: 90%; }
+  from { top: 12%; }
+  to { top: 88%; }
 }
 
 .reticle-corner {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border: 2px solid var(--brand);
+  z-index: 4;
 }
 
 .reticle-corner.tl { top: 6px; left: 6px; border-right: none; border-bottom: none; }
@@ -962,10 +964,47 @@ body {
 .reticle-corner.bl { bottom: 6px; left: 6px; border-right: none; border-top: none; }
 .reticle-corner.br { bottom: 6px; right: 6px; border-left: none; border-top: none; }
 
-.aperture-icon {
-  width: 48px;
-  height: 48px;
-  color: var(--brand);
+.robo-scanner-wrap {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.robo-scanner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 14px rgba(14, 165, 233, 0.35));
+  animation: robo-float 3.2s ease-in-out infinite;
+  user-select: none;
+  pointer-events: none;
+}
+
+@keyframes robo-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.02);
+  }
+}
+
+.robo-glow-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.22) 0%, transparent 72%);
+  z-index: -1;
+  animation: robo-pulse-glow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes robo-pulse-glow {
+  0% { opacity: 0.4; transform: scale(0.95); }
+  100% { opacity: 0.95; transform: scale(1.06); }
 }
 
 .empty-state-text {
@@ -1691,6 +1730,11 @@ body {
   cursor: pointer;
   font-size: 1rem;
   transition: all var(--transition-fast);
+}
+
+.btn-modal-close svg {
+  width: 16px;
+  height: 16px;
 }
 
 .btn-modal-close:hover {

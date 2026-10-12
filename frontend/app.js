@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── 3. Theme Management ──
   function initTheme() {
-    const savedTheme = localStorage.getItem('deepfake_forensics_theme') || localStorage.getItem('amingo_forensics_theme');
+    const savedTheme = localStorage.getItem('deepfake_forensics_theme');
     const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
 
