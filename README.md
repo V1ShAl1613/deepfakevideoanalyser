@@ -214,23 +214,23 @@ Labels: {0: 'real', 1: 'fake'}
 
 ## 🏃 Running the Application
 
-### Quick Start Command
+### Quick Start Commands
 
-Start the local web server with Uvicorn:
-
-#### PowerShell:
+#### 1. Start the Backend API (FastAPI)
+In your terminal, start the Python backend:
 ```powershell
-.\.venv\Scripts\python.exe -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+.\.venv\Scripts\python.exe -m uvicorn server:app --host 127.0.0.1 --port 8000
 ```
 
-#### Command Prompt (or with active `.venv`):
-```cmd
-uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+#### 2. Start the Frontend Dev Server (Vite)
+In another terminal, start the modern Vite frontend with hot-reload and API proxying:
+```bash
+npm run dev
 ```
 
 ### Accessing the Web Interface
-Once started, open your web browser and navigate to:
-👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+- **Via Vite Dev Server (Hot-Reloading)**: 👉 **[http://127.0.0.1:5173](http://127.0.0.1:5173)** *(automatically proxies all `/api` calls to the FastAPI backend)*
+- **Direct via FastAPI Server**: 👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
 ---
 

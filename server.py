@@ -104,31 +104,38 @@ def extract_frames(video_path: str) -> list[Image.Image]:
 
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        if total < 1:
-            raise ValueError("The video contains no readable frames.")
-
-        # Select 16 evenly spaced frame positions.
-        indices = np.linspace(
-            0, total - 1, NUM_FRAMES
-        ).astype(int)
-
         frames: list[Image.Image] = []
 
-        for index in indices:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, int(index))
-            ok, frame = cap.read()
+        # If frame count is valid and positive, sample evenly across timeline
+        if total >= NUM_FRAMES:
+            indices = np.linspace(0, total - 1, NUM_FRAMES).astype(int)
+            for index in indices:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, int(index))
+                ok, frame = cap.read()
+                if ok:
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frames.append(Image.fromarray(frame))
 
-            if not ok:
-                continue
-
-            # OpenCV uses BGR; the model expects RGB.
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frames.append(Image.fromarray(frame))
+        # Fallback if frame count is unreadable (common with mobile/WhatsApp VFR videos)
+        if not frames:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            step = max(1, total // NUM_FRAMES) if total > NUM_FRAMES else 1
+            frame_idx = 0
+            while True:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                if frame_idx % step == 0:
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frames.append(Image.fromarray(frame))
+                    if len(frames) == NUM_FRAMES:
+                        break
+                frame_idx += 1
 
         if not frames:
-            raise ValueError("Could not extract video frames.")
+            raise ValueError("Could not extract any readable frames from the video.")
 
-        # Repeat frames if the clip was too short to provide 16.
+        # Pad with last frame if video is shorter than NUM_FRAMES
         while len(frames) < NUM_FRAMES:
             frames.append(frames[-1])
 
@@ -143,6 +150,8 @@ def frames_to_base64(frames: list[Image.Image]) -> list[str]:
     encoded = []
     for frame in frames:
         buf = io.BytesIO()
+        if frame.mode != "RGB":
+            frame = frame.convert("RGB")
         frame.save(buf, format="JPEG", quality=80)
         b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
         encoded.append(f"data:image/jpeg;base64,{b64}")
@@ -182,13 +191,11 @@ async def analyze_video(file: UploadFile = File(...)):
     temp_path = None
 
     try:
-        # Save uploaded file to a temp location
-        with tempfile.NamedTemporaryFile(
-            delete=False, suffix=ext
-        ) as tmp:
-            content = await file.read()
-            tmp.write(content)
-            temp_path = tmp.name
+        # Create temporary file using mkstemp to avoid Windows file-locking conflicts (Errno 22)
+        fd, temp_path = tempfile.mkstemp(suffix=ext)
+        with os.fdopen(fd, "wb") as tmp:
+            while chunk := await file.read(1024 * 1024):
+                tmp.write(chunk)
 
         # Load model and run inference
         processor, model, device = get_model()
@@ -236,6 +243,8 @@ async def analyze_video(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail=str(e))
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=500,
             detail=f"Analysis failed: {str(e)}",
@@ -243,14 +252,29 @@ async def analyze_video(file: UploadFile = File(...)):
 
     finally:
         if temp_path and os.path.exists(temp_path):
-            os.remove(temp_path)
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+
 
 
 # ---------------------------------------------------------------------------
-# Serve frontend
+# Serve frontend & static assets (with no-cache headers for instant updates)
 # ---------------------------------------------------------------------------
 
 FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
+
+
+@app.middleware("http")
+async def add_cache_control_header(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static") or request.url.path == "/":
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 
 app.mount(
     "/static",
@@ -262,4 +286,8 @@ app.mount(
 @app.get("/")
 async def serve_frontend():
     """Serve the main HTML page."""
-    return FileResponse(str(FRONTEND_DIR / "index.html"))
+    return FileResponse(
+        str(FRONTEND_DIR / "index.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
+

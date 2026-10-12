@@ -24,3 +24,8 @@ desktop.ini
 # IDE / Editor files
 .vscode/
 .idea/
+
+# Node / Frontend dependencies
+node_modules/
+dist/
+.vite/

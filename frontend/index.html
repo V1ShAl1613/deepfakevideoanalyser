@@ -1,87 +1,448 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Amingo Video Forensics — AI-powered deepfake detection. Upload a video and analyze it for signs of facial manipulation." />
+  <meta name="description" content="Amingo Video Forensics — Enterprise AI-powered deepfake detection and media authenticity verification platform powered by Spatio-Temporal VideoMAE." />
+  <meta name="theme-color" content="#0d1117" />
 
-  <title>Amingo Video Forensics</title>
+  <title>Amingo Video Forensics — AI Media Authenticity Analysis</title>
 
+  <!-- Typography: Plus Jakarta Sans via Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/style.css?v=2.2.0" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f46e5'/><path d='M30 25 L75 50 L30 75 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='10' fill='%2310b981'/></svg>" />
 </head>
 <body>
-  <div class="app-container">
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow ambient-glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow ambient-glow-2" aria-hidden="true"></div>
 
-    <!-- ── Header ── -->
-    <header class="app-header">
-      <div class="app-logo">🎬</div>
-      <h1 class="app-title">Amingo Video Forensics</h1>
-      <p class="app-subtitle">AI-powered deepfake detection for video content</p>
-      <div class="status-badge" id="statusBadge">
-        <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">Connecting…</span>
+  <!-- App Shell -->
+  <div class="app-shell">
+
+    <!-- ── Top Navigation Bar ── -->
+    <header class="app-header" role="banner">
+      <div class="header-inner">
+        <!-- Brand identity -->
+        <div class="brand-group">
+          <div class="brand-logo" aria-hidden="true">
+            <svg class="logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="url(#brand-grad)" />
+              <path d="M10 22V10L23 16L10 22Z" fill="white" fill-opacity="0.9" />
+              <circle cx="23" cy="9" r="3.5" fill="#10B981" stroke="#0F172A" stroke-width="1.5" />
+              <path d="M6 16C6 10.4772 10.4772 6 16 6" stroke="white" stroke-opacity="0.35" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M26 16C26 21.5228 21.5228 26 16 26" stroke="white" stroke-opacity="0.35" stroke-width="1.5" stroke-linecap="round" />
+              <defs>
+                <linearGradient id="brand-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#4F46E5" />
+                  <stop offset="1" stop-color="#06B6D4" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="brand-titles">
+            <div class="brand-name-row">
+              <span class="brand-name">Amingo</span>
+              <span class="brand-sub">Video Forensics</span>
+              <span class="brand-badge">v1.0 ENGINE</span>
+            </div>
+            <span class="brand-tagline">AI Spatio-Temporal Media Authenticity Verification</span>
+          </div>
+        </div>
+
+        <!-- System Telemetry & Status Badges -->
+        <div class="header-telemetry" role="status" aria-live="polite">
+          <!-- Engine Status Badge -->
+          <div class="telemetry-badge" id="badgeEngineStatus" title="FastAPI Engine Connectivity">
+            <span class="status-indicator-dot connecting" id="engineDot"></span>
+            <span class="telemetry-label">Engine:</span>
+            <span class="telemetry-value" id="engineStatusText">Connecting…</span>
+          </div>
+
+          <!-- Model Status Badge -->
+          <div class="telemetry-badge" id="badgeModelStatus" title="VideoMAE Vision Transformer State">
+            <span class="telemetry-label">Model:</span>
+            <span class="telemetry-value" id="modelStatusText">VideoMAE (FF++)</span>
+          </div>
+
+          <!-- Compute Device Badge (strictly matches backend response) -->
+          <div class="telemetry-badge device-badge" id="badgeDevice" title="Active Compute Device">
+            <svg class="device-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3zm2 1v8h8V4H4z" />
+              <path d="M6 1V0h1v1H6zm3 0V0h1v1H9zm3 0V0h1v1h-1zM6 16v-1h1v1H6zm3 0v-1h1v1H9zm3 0v-1h1v1h-1zM0 6h1v1H0V6zm0 3h1v1H0V9zm0 3h1v1H0v-1zm16-6h-1v1h1V6zm0 3h-1v1h1V9zm0 3h-1v1h1v-1z"/>
+            </svg>
+            <span class="telemetry-label">Device:</span>
+            <span class="telemetry-value" id="deviceText">Detecting…</span>
+          </div>
+        </div>
+
+        <!-- Controls: Theme toggle & Guide modal trigger -->
+        <div class="header-actions">
+          <button type="button" class="action-btn" id="btnOpenGuide" aria-label="Forensic Specifications and Guide" title="Forensic Architecture & Methodology">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            <span class="btn-text-desktop">Specs</span>
+          </button>
+
+          <button type="button" class="action-btn theme-toggle-btn" id="btnThemeToggle" aria-label="Toggle Dark/Light Theme" title="Toggle Theme">
+            <svg class="theme-icon icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+            </svg>
+            <svg class="theme-icon icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- ── Info Banner ── -->
-    <div class="info-banner">
-      <span class="icon">ℹ️</span>
-      <span>This version detects facial deepfakes. It does not establish whether every fully AI-generated scene is fake.</span>
-    </div>
+    <!-- ── Main Workspace ── -->
+    <main class="main-content" id="mainContent">
+      <div class="workspace-grid">
 
-    <!-- ── Upload Card ── -->
-    <div class="upload-card">
-      <div class="card-header">
-        <h2>Upload a Video</h2>
-        <p>Supports MP4, MOV, and WebM formats</p>
-      </div>
-      <div class="card-body">
-        <div class="drop-zone" id="dropZone">
-          <div class="drop-zone-icon">📁</div>
-          <div class="drop-zone-text">Drop your video here or click to browse</div>
-          <div class="drop-zone-hint">Maximum recommended size: 200 MB</div>
-          <input type="file" id="fileInput" accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm" />
-        </div>
-
-        <!-- Video preview (hidden by default) -->
-        <div id="previewArea" style="display: none;">
-          <div class="video-preview-wrapper">
-            <video id="videoPreview" controls></video>
-          </div>
-          <div class="file-info">
-            <span class="file-name" id="fileName">
-              <span>🎥</span>
-              <span id="fileNameText"></span>
+        <!-- ── Left Column: Video Ingestion & Inspection Preview ── -->
+        <section class="workspace-card ingestion-panel" aria-labelledby="ingestionHeading">
+          <div class="card-header">
+            <div class="header-title-wrap">
+              <div class="panel-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="panel-title" id="ingestionHeading">Video Ingestion</h2>
+                <p class="panel-subtitle">Upload video footage for spatiotemporal forensic analysis</p>
+              </div>
+            </div>
+            <span class="security-pill" title="Inference is executed strictly on local hardware with zero external egress">
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.464 9.99a11.775 11.775 0 0 0 3.739 3.1c.42.204.893.204 1.312 0a11.775 11.775 0 0 0 3.739-3.1c1.677-2.195 3.06-5.513 2.464-9.99a1.54 1.54 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.5 2.085a1 1 0 0 1-2 0l.5-2.085A1.5 1.5 0 0 1 8 5z" clip-rule="evenodd"/>
+              </svg>
+              Air-Gapped / Local
             </span>
-            <button class="btn-remove" id="btnRemove">✕ Remove</button>
+          </div>
+
+          <div class="card-body">
+            <!-- Drag & Drop Zone (Default state) -->
+            <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Drop video file or click to browse">
+              <input type="file" id="fileInput" accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm" class="file-input-hidden" aria-hidden="true" />
+              
+              <div class="drop-zone-content">
+                <div class="drop-zone-illustration">
+                  <div class="radar-circle" aria-hidden="true"></div>
+                  <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+
+                <div class="drop-zone-copy">
+                  <span class="drop-headline">Drop forensic video clip here</span>
+                  <span class="drop-subline">or <span class="highlight-browse">browse files</span> from workstation</span>
+                </div>
+
+                <div class="drop-metadata-specs">
+                  <span class="spec-tag">MP4</span>
+                  <span class="spec-tag">MOV</span>
+                  <span class="spec-tag">WebM</span>
+                  <span class="spec-divider">•</span>
+                  <span class="spec-max">Max: 250 MB</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video Preview Stage (Shown when file is selected) -->
+            <div class="preview-stage" id="previewArea" style="display: none;">
+              <div class="video-preview-container">
+                <video id="videoPreview" controls preload="metadata" playsinline></video>
+                <div class="preview-overlay-tag">Local Inspection Source</div>
+              </div>
+
+              <!-- File Information Card -->
+              <div class="file-details-card">
+                <div class="file-icon-wrap" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="file-meta-content">
+                  <span class="file-meta-name" id="fileNameText">video_sample.mp4</span>
+                  <div class="file-meta-tags">
+                    <span class="file-meta-badge" id="fileSizeBadge">0 MB</span>
+                    <span class="file-meta-badge" id="videoResolutionBadge">Resolving…</span>
+                    <span class="file-meta-badge" id="videoDurationBadge">0.0s</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-remove-video" id="btnRemove" title="Unload video and choose another" aria-label="Remove current video">
+                  <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Analysis Configuration / Parameters Info -->
+            <div class="analysis-config-box">
+              <div class="config-row">
+                <span class="config-label">Inspection Strategy</span>
+                <span class="config-value">16-Frame Spatio-Temporal Sampling</span>
+              </div>
+              <div class="config-row">
+                <span class="config-label">Transformer Model</span>
+                <span class="config-value">VideoMAE (FaceForensics++ Fine-Tuned)</span>
+              </div>
+              <div class="config-row">
+                <span class="config-label">Input Tensor</span>
+                <span class="config-value">16 × 3 × 224 × 224 (Tubelet size: 2)</span>
+              </div>
+            </div>
+
+            <!-- Error Banner (Shown upon error) -->
+            <div class="error-banner" id="errorBanner" role="alert" style="display: none;">
+              <div class="error-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="error-content">
+                <span class="error-title">Analysis Interrupted</span>
+                <span class="error-text" id="errorText">An error occurred during video processing.</span>
+              </div>
+            </div>
+
+            <!-- Primary Action Button -->
+            <button type="button" class="btn-primary-analyze" id="btnAnalyze" disabled aria-disabled="true">
+              <span class="btn-analyze-inner" id="btnLabel">
+                <svg class="btn-action-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+                <span>Run Forensic Analysis</span>
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ── Right Column: Forensic Results & Verdict ── -->
+        <section class="workspace-card results-panel" id="resultsSection" aria-labelledby="resultsHeading">
+          
+          <!-- Empty State (Before analysis is run) -->
+          <div class="empty-state-view" id="emptyStateView">
+            <div class="empty-state-illustration" aria-hidden="true">
+              <div class="scan-reticle" style="width: 110px; height: 110px; max-width: 110px; max-height: 110px; min-width: 110px; min-height: 110px; position: relative;">
+                <div class="scan-beam"></div>
+                <div class="reticle-corner tl"></div>
+                <div class="reticle-corner tr"></div>
+                <div class="reticle-corner bl"></div>
+                <div class="reticle-corner br"></div>
+                <svg class="aperture-icon" width="48" height="48" style="width: 48px; height: 48px; max-width: 48px; max-height: 48px; display: block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="12" r="10" stroke-opacity="0.3" />
+                  <line x1="14.31" y1="8" x2="20.05" y2="17.94" />
+                  <line x1="9.69" y1="8" x2="21.17" y2="8" />
+                  <line x1="7.38" y1="12" x2="13.12" y2="2.06" />
+                  <line x1="9.69" y1="16" x2="3.95" y2="6.06" />
+                  <line x1="14.31" y1="16" x2="2.83" y2="16" />
+                  <line x1="16.62" y1="12" x2="10.88" y2="21.94" />
+                </svg>
+              </div>
+            </div>
+
+            <div class="empty-state-text">
+              <h2 class="empty-title" id="resultsHeading">Awaiting Video Input</h2>
+              <p class="empty-description">
+                Upload video media to begin spatiotemporal inspection. The model analyzes motion vectors, cross-frame facial coherence, and generative reenactment artifacts.
+              </p>
+            </div>
+
+            <!-- Features Highlights in Empty State -->
+            <div class="empty-features-grid">
+              <div class="feature-bullet">
+                <div class="bullet-icon">⚡</div>
+                <div>
+                  <strong>Temporal Dynamics</strong>
+                  <span>Detects blinking rate glitches and boundary warping across 16 frames.</span>
+                </div>
+              </div>
+              <div class="feature-bullet">
+                <div class="bullet-icon">🛡️</div>
+                <div>
+                  <strong>Authenticity Scoring</strong>
+                  <span>Calibrated probabilistic assessment with high fidelity confidence metrics.</span>
+                </div>
+              </div>
+              <div class="feature-bullet">
+                <div class="bullet-icon">🔒</div>
+                <div>
+                  <strong>Private Execution</strong>
+                  <span>Zero cloud exposure — all calculations run locally in memory.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Results Container (Rendered dynamically via JS) -->
+          <div class="active-results-view" id="activeResultsView" style="display: none;">
+            <!-- Dynamically populated by app.js -->
+          </div>
+
+        </section>
+
+      </div>
+
+      <!-- ── Structured Forensic Report Section (Lower Section) ── -->
+      <section class="forensic-report-card" id="forensicReportSection" style="display: none;" aria-labelledby="reportHeading">
+        <div class="card-header report-header">
+          <div class="header-title-wrap">
+            <div class="panel-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="panel-title" id="reportHeading">Forensic Verification Dossier</h2>
+              <p class="panel-subtitle">Comprehensive model evaluation and media integrity breakdown</p>
+            </div>
+          </div>
+
+          <div class="report-header-actions">
+            <button type="button" class="action-btn" id="btnPrintReport">
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Export Dossier</span>
+            </button>
           </div>
         </div>
 
-        <button class="btn-analyze" id="btnAnalyze" disabled>
-          <span id="btnLabel">🔍 Analyze Video</span>
-        </button>
+        <div class="report-content" id="reportContentArea">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </section>
 
-        <!-- Error display -->
-        <div class="error-banner" id="errorBanner" style="display: none;">
-          <span>⚠️</span>
-          <span id="errorText"></span>
+    </main>
+
+    <!-- ── App Footer ── -->
+    <footer class="app-footer" role="contentinfo">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-brand">Amingo Video Forensics</span>
+          <span class="footer-dot">•</span>
+          <span class="footer-copyright">Proprietary AI Architecture</span>
+          <span class="footer-dot">•</span>
+          <span class="footer-specs">VideoMAE Transformer (FaceForensics++ C23)</span>
+        </div>
+        <div class="footer-right">
+          <span class="footer-badge">100% Offline Inference</span>
         </div>
       </div>
-    </div>
-
-    <!-- ── Results Section (populated by JS) ── -->
-    <div id="resultsSection"></div>
-
-    <!-- ── Footer ── -->
-    <footer class="app-footer">
-      <p>Powered by <span class="brand">Amingo</span> · All rights reserved</p>
     </footer>
   </div>
 
-  <script src="/static/app.js"></script>
+  <!-- ── Frame Lightbox Modal ── -->
+  <div class="modal-backdrop" id="frameModal" role="dialog" aria-modal="true" aria-labelledby="modalFrameTitle" style="display: none;">
+    <div class="modal-dialog frame-modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge" id="modalFrameBadge">FRAME #01 / 16</span>
+          <h3 class="modal-title" id="modalFrameTitle">Sampled Timeline Inspection</h3>
+          <span class="modal-meta-time" id="modalFrameTime">Timestamp: 0.00s</span>
+        </div>
+        <button type="button" class="btn-modal-close" id="btnCloseModal" aria-label="Close frame preview">✕</button>
+      </div>
+      <div class="modal-body frame-modal-body">
+        <div class="frame-large-container">
+          <img id="modalFrameImg" src="" alt="Enlarged sampled forensic frame" />
+        </div>
+        <div class="modal-nav-bar">
+          <button type="button" class="modal-nav-btn" id="btnModalPrev">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <span>Previous Frame</span>
+          </button>
+          <span class="modal-counter-indicator" id="modalCounterIndicator">1 of 16</span>
+          <button type="button" class="modal-nav-btn" id="btnModalNext">
+            <span>Next Frame</span>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Forensic Specs & Guide Modal ── -->
+  <div class="modal-backdrop" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle" style="display: none;">
+    <div class="modal-dialog guide-modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge">ARCHITECTURE & SPECS</span>
+          <h3 class="modal-title" id="guideModalTitle">Amingo Video Forensics Architecture</h3>
+        </div>
+        <button type="button" class="btn-modal-close" id="btnCloseGuideModal" aria-label="Close specifications dialog">✕</button>
+      </div>
+      <div class="modal-body guide-modal-body">
+        <section class="guide-section">
+          <h4>🧠 Spatio-Temporal VideoMAE Model</h4>
+          <p>
+            Unlike single-frame detectors that analyze static snapshots, Amingo Video Forensics processes videos as 3-dimensional volumes across time. The system feeds 16 uniformly sampled frames through a Video Masked Autoencoder with 12 transformer encoder layers, tracking cross-frame temporal motion consistency, lighting stability, and facial reenactment boundaries.
+          </p>
+        </section>
+
+        <section class="guide-section">
+          <h4>📊 Benchmark Performance (FaceForensics++ C23)</h4>
+          <div class="specs-table-container">
+            <table class="specs-table">
+              <thead>
+                <tr>
+                  <th>Validation Metric</th>
+                  <th>Observed Score</th>
+                  <th>Evaluation Standard</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Classification Accuracy</td>
+                  <td><strong>88.0%</strong></td>
+                  <td>FaceForensics++ C23 validation split</td>
+                </tr>
+                <tr>
+                  <td>Area Under Curve (AUC)</td>
+                  <td><strong>0.836</strong></td>
+                  <td>Discriminative power on manipulated vs original</td>
+                </tr>
+                <tr>
+                  <td>F1-Score</td>
+                  <td><strong>0.742</strong></td>
+                  <td>Balanced precision and recall</td>
+                </tr>
+                <tr>
+                  <td>Input Resolution</td>
+                  <td><strong>16 × 224 × 224</strong></td>
+                  <td>Normalized RGB 3-channel spatio-temporal tensor</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <h4>⚖️ Probabilistic Interpretation & Limitations</h4>
+          <p>
+            Amingo Video Forensics produces statistical probabilities based on learned patterns from the FaceForensics++ benchmark. It is optimized for facial reenactment, deepfake synthesis, and facial attribute tampering. It does not establish absolute proof and should be complemented by multi-modal forensics (audio analysis, metadata/C2PA verification, and chain of custody inspection).
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast Notification Container ── -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Interactive Application Controller -->
+  <script src="/static/app.js?v=2.2.0"></script>
 </body>
 </html>
