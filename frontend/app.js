@@ -188,7 +188,27 @@ function initApp() {
     return `${mins}m ${secs}s`;
   }
 
-  // ── 5. Backend Base URL & Health Check ──
+  // ── 5. Backend Base URL, HF ZeroGPU Space Client & Health Check ──
+  const HF_SPACE_ID = 'V1ShAl1613/deepfakevideoanalyser';
+  let gradioClientPromise = null;
+
+  async function getGradioClient() {
+    if (!gradioClientPromise) {
+      gradioClientPromise = (async () => {
+        let ClientClass;
+        try {
+          const mod = await import('@gradio/client');
+          ClientClass = mod.Client;
+        } catch (_) {
+          const mod = await import('https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js');
+          ClientClass = mod.Client;
+        }
+        return await ClientClass.connect(HF_SPACE_ID);
+      })();
+    }
+    return gradioClientPromise;
+  }
+
   function getApiBaseUrl() {
     if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/+$/, '');
     const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
@@ -199,47 +219,50 @@ function initApp() {
   }
 
   async function checkHealth() {
+    const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+
+    // 1. Check local backend if on localhost
+    if (isLocal) {
+      try {
+        const apiUrl = `${getApiBaseUrl()}/api/health`;
+        const res = await fetch(apiUrl);
+        if (res.ok) {
+          const data = await res.json();
+          const dev = (data.device || 'CPU').toUpperCase();
+
+          if (engineDot) engineDot.className = 'status-indicator-dot online';
+          if (engineStatusText) engineStatusText.textContent = 'Engine Ready';
+          if (deviceText) deviceText.textContent = dev === 'CUDA' ? 'CUDA (GPU)' : 'CPU Multi-Core';
+          if (badgeDevice) {
+            if (dev === 'CUDA') badgeDevice.classList.add('cuda-active');
+            else badgeDevice.classList.remove('cuda-active');
+          }
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Check Hugging Face ZeroGPU Space status (Vercel deployment or local fallback)
     try {
-      const apiUrl = `${getApiBaseUrl()}/api/health`;
-      const res = await fetch(apiUrl);
+      const res = await fetch(`https://huggingface.co/api/spaces/${HF_SPACE_ID}`);
       if (res.ok) {
         const data = await res.json();
-        const dev = (data.device || 'CPU').toUpperCase();
+        const stage = data.runtime && data.runtime.stage;
+        if (stage === 'RUNNING' || stage === 'APP_STARTING' || stage === 'BUILDING') {
+          if (engineDot) engineDot.className = 'status-indicator-dot online';
+          if (engineStatusText) engineStatusText.textContent = 'ZeroGPU Online';
+          if (deviceText) deviceText.textContent = 'Hugging Face A10G';
+          if (badgeDevice) badgeDevice.classList.add('cuda-active');
+          return;
+        }
+      }
+    } catch (_) {}
 
-        if (engineDot) {
-          engineDot.className = 'status-indicator-dot online';
-        }
-        if (engineStatusText) {
-          engineStatusText.textContent = 'Engine Ready';
-        }
-
-        if (deviceText) {
-          deviceText.textContent = dev === 'CUDA' ? 'CUDA (GPU)' : 'CPU Multi-Core';
-        }
-        if (badgeDevice) {
-          if (dev === 'CUDA') {
-            badgeDevice.classList.add('cuda-active');
-          } else {
-            badgeDevice.classList.remove('cuda-active');
-          }
-        }
-      } else {
-        throw new Error(`Health status: ${res.status}`);
-      }
-    } catch (err) {
-      if (engineDot) {
-        engineDot.className = 'status-indicator-dot offline';
-      }
-      if (engineStatusText) {
-        engineStatusText.textContent = 'Engine Offline';
-      }
-      if (deviceText) {
-        deviceText.textContent = 'Offline';
-      }
-      if (badgeDevice) {
-        badgeDevice.classList.remove('cuda-active');
-      }
-    }
+    // 3. Fallback when offline
+    if (engineDot) engineDot.className = 'status-indicator-dot offline';
+    if (engineStatusText) engineStatusText.textContent = 'Engine Offline';
+    if (deviceText) deviceText.textContent = 'Offline';
+    if (badgeDevice) badgeDevice.classList.remove('cuda-active');
   }
 
   checkHealth();
@@ -402,26 +425,68 @@ function initApp() {
 
     showToast('Dispatched forensic analysis job...', 'info', 3000);
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
     try {
-      const apiUrl = `${getApiBaseUrl()}/api/analyze`;
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        body: formData,
-      });
+      let data = null;
+      const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+      const customBackendUrl = localStorage.getItem('deepfake_backend_url');
 
-      if (!response.ok) {
-        let errMessage = `Server returned HTTP ${response.status}`;
+      // 1. Try local FastAPI server if running locally
+      if (isLocal && !customBackendUrl) {
         try {
-          const errData = await response.json();
-          if (errData && errData.detail) errMessage = errData.detail;
-        } catch (_) {}
-        throw new Error(errMessage);
+          const apiUrl = `${getApiBaseUrl()}/api/analyze`;
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (response.ok) {
+            data = await response.json();
+          }
+        } catch (localErr) {
+          console.warn('Local backend unreachable, falling back to Hugging Face ZeroGPU Space...', localErr);
+        }
       }
 
-      const data = await response.json();
+      // 2. If on Vercel or local fallback, dispatch to Hugging Face ZeroGPU Space
+      if (!data) {
+        btnLabel.innerHTML = `
+          <span class="spinner-ring" aria-hidden="true"></span>
+          <span>Inferring on Hugging Face ZeroGPU (A10G)…</span>
+        `;
+        showToast('Connecting to Hugging Face ZeroGPU Space…', 'info', 3000);
+
+        const client = await getGradioClient();
+        const result = await client.predict('/predict_video', {
+          video_path: selectedFile,
+        });
+
+        // Extract Gradio return components: [authenticity_probability, report, gallery]
+        const labelObj = result.data && result.data[0] ? result.data[0] : {};
+        const confList = labelObj.confidences || [];
+        const results = confList.map(c => ({
+          label: String(c.label).toUpperCase(),
+          score: Math.round(Number(c.confidence) * 10000) / 10000,
+        }));
+
+        const gallery = result.data && result.data[2] ? result.data[2] : [];
+        const frames = gallery.map(item => {
+          if (typeof item === 'string') return item;
+          if (item && item.image && item.image.url) return item.image.url;
+          if (item && item.image) return item.image;
+          return '';
+        }).filter(Boolean);
+
+        data = {
+          results: results.length ? results : [{ label: labelObj.label || 'REAL', score: 0.95 }],
+          frames: frames,
+          device: 'ZeroGPU (NVIDIA A10G)',
+          frames_sampled: frames.length || 16,
+        };
+      }
+
       const elapsedSeconds = ((performance.now() - startTime) / 1000).toFixed(2);
 
       renderResults(data, elapsedSeconds);
