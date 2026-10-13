@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node run.js",
+    "start": "node run.js",
     "dev:frontend": "vite",
-    "dev:backend": "python3 -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload",
-    "install:requirements": "python3 -m pip install -r requirements.txt",
+    "dev:backend": "python -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload",
+    "install:requirements": "python -m pip install -r requirements.txt",
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "vite build && gh-pages -d dist"

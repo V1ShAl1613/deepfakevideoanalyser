@@ -56,9 +56,27 @@ app.add_middleware(
 _model_cache: dict = {}
 
 
+def ensure_model_weights():
+    """Ensure fine-tuned VideoMAE weights exist locally, downloading if absent."""
+    weights_path = Path(MODEL_ID) / "model.safetensors"
+    if not weights_path.exists():
+        print("[setup] Model weights not found. Downloading fine-tuned VideoMAE (FaceForensics++)...")
+        from huggingface_hub import hf_hub_download
+        import shutil
+
+        Path(MODEL_ID).mkdir(parents=True, exist_ok=True)
+        downloaded = hf_hub_download(
+            repo_id="Vansh180/VideoMae-ffc23-deepfake-detector",
+            filename="model.safetensors",
+        )
+        shutil.copy(downloaded, str(weights_path))
+        print("[setup] Trained model weights downloaded successfully.")
+
+
 def get_model():
     """Load model, processor, and device once and cache them."""
     if not _model_cache:
+        ensure_model_weights()
         device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )

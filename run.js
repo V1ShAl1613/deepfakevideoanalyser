@@ -6,30 +6,70 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 1. Detect Python binary
-function findPython() {
-  const candidates = [
-    path.join(__dirname, '.venv', 'bin', 'python'),
-    path.join(__dirname, '.venv', 'Scripts', 'python.exe'),
-    'python3',
-    'python',
-  ];
+// 1. Ensure Node.js dependencies exist
+function checkAndInstallNodeModules() {
+  const viteBin = path.join(__dirname, 'node_modules', '.bin', process.platform === 'win32' ? 'vite.cmd' : 'vite');
+  if (!fs.existsSync(viteBin)) {
+    console.log('\x1b[33m[setup]\x1b[0m Installing frontend dependencies (npm install)...');
+    execSync('npm install', {
+      cwd: __dirname,
+      stdio: 'inherit',
+      shell: true,
+    });
+    console.log('\x1b[32m[setup]\x1b[0m Frontend dependencies installed successfully.');
+  }
+}
 
-  for (const cmd of candidates) {
+// 2. Detect or create Python virtual environment
+function findPython() {
+  const venvPython = process.platform === 'win32'
+    ? path.join(__dirname, '.venv', 'Scripts', 'python.exe')
+    : path.join(__dirname, '.venv', 'bin', 'python');
+
+  if (fs.existsSync(venvPython)) {
+    return venvPython;
+  }
+
+  // Detect system Python candidate
+  const systemCandidates = ['python', 'python3', 'py'];
+  let systemPython = null;
+  for (const cmd of systemCandidates) {
     try {
       execSync(`${cmd} --version`, { stdio: 'ignore' });
-      return cmd;
+      systemPython = cmd;
+      break;
     } catch {
       // try next
     }
   }
-  throw new Error('No Python installation found. Please ensure Python 3 is installed.');
+
+  if (!systemPython) {
+    throw new Error('No Python installation found. Please ensure Python 3.10+ is installed and available in PATH.');
+  }
+
+  // Automatically create .venv if missing
+  const venvDir = path.join(__dirname, '.venv');
+  if (!fs.existsSync(venvDir)) {
+    console.log('\x1b[33m[setup]\x1b[0m Creating Python virtual environment (.venv)...');
+    try {
+      execSync(`${systemPython} -m venv .venv`, { cwd: __dirname, stdio: 'inherit' });
+      if (fs.existsSync(venvPython)) {
+        console.log('\x1b[32m[setup]\x1b[0m Virtual environment created successfully.');
+        return venvPython;
+      }
+    } catch (err) {
+      console.warn('\x1b[33m[setup]\x1b[0m Could not create .venv; proceeding with system Python:', systemPython);
+      return systemPython;
+    }
+  }
+
+  return venvPython;
 }
 
-// 2. Ensure Python requirements are installed
+// 3. Ensure Python requirements are installed
 function checkAndInstallRequirements(pythonCmd) {
   console.log('\x1b[36m[setup]\x1b[0m Checking Python environment...');
-  const checkCode = 'import fastapi, uvicorn, torch, torchvision, transformers, cv2, PIL, numpy';
+  const checkCode = 'import fastapi, uvicorn, torch, torchvision, transformers, cv2, PIL, numpy, huggingface_hub';
   let needsInstall = false;
 
   try {
@@ -48,18 +88,20 @@ function checkAndInstallRequirements(pythonCmd) {
     console.log('\x1b[32m[setup]\x1b[0m Dependencies installed successfully.');
   }
 
-  // 3. Verify model weights exist
-  const modelWeights = path.join(__dirname, 'models', 'videomae', 'model.safetensors');
+  // 4. Verify model weights exist
+  const modelDir = path.join(__dirname, 'models', 'videomae');
+  const modelWeights = path.join(modelDir, 'model.safetensors');
   if (!fs.existsSync(modelWeights)) {
     console.log('\x1b[33m[setup]\x1b[0m Downloading fine-tuned VideoMAE model weights (FaceForensics++)...');
-    const initScript = `
-from huggingface_hub import hf_hub_download
-import shutil
-downloaded = hf_hub_download(repo_id='Vansh180/VideoMae-ffc23-deepfake-detector', filename='model.safetensors')
-shutil.copy(downloaded, 'models/videomae/model.safetensors')
-print('Trained model weights installed successfully.')
-`;
-    execSync(`${pythonCmd} -c "${initScript.replace(/\n/g, ' ')}"`, {
+    fs.mkdirSync(modelDir, { recursive: true });
+    const initScript = [
+      "from huggingface_hub import hf_hub_download",
+      "import shutil",
+      "downloaded = hf_hub_download(repo_id='Vansh180/VideoMae-ffc23-deepfake-detector', filename='model.safetensors')",
+      "shutil.copy(downloaded, 'models/videomae/model.safetensors')",
+      "print('Trained model weights installed successfully.')"
+    ].join('; ');
+    execSync(`${pythonCmd} -c "${initScript}"`, {
       cwd: __dirname,
       stdio: 'inherit',
     });
@@ -75,8 +117,12 @@ function freePort(port) {
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
         const pid = parts[parts.length - 1];
-        if (pid && !isNaN(pid) && parseInt(pid) > 0) {
-          execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+        if (pid && !isNaN(pid) && parseInt(pid) > 0 && parseInt(pid) !== process.pid) {
+          try {
+            execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+          } catch {
+            // ignore if already exited
+          }
         }
       }
     } else {
@@ -94,8 +140,9 @@ function freePort(port) {
   }
 }
 
-// 4. Start backend and frontend
+// 5. Start backend and frontend
 function start() {
+  checkAndInstallNodeModules();
   const pythonCmd = findPython();
   checkAndInstallRequirements(pythonCmd);
 
@@ -123,6 +170,7 @@ function start() {
   const viteBin = path.join(__dirname, 'node_modules', '.bin', process.platform === 'win32' ? 'vite.cmd' : 'vite');
   const frontend = spawn(viteBin, [], {
     cwd: __dirname,
+    shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
   });
 
@@ -136,8 +184,17 @@ function start() {
   // Handle termination
   const cleanExit = () => {
     console.log('\n\x1b[33m[shutdown]\x1b[0m Stopping backend and frontend servers...');
-    backend.kill();
-    frontend.kill();
+    try {
+      if (process.platform === 'win32') {
+        if (backend.pid) execSync(`taskkill /F /T /PID ${backend.pid}`, { stdio: 'ignore' });
+        if (frontend.pid) execSync(`taskkill /F /T /PID ${frontend.pid}`, { stdio: 'ignore' });
+      } else {
+        backend.kill();
+        frontend.kill();
+      }
+    } catch {
+      // ignore
+    }
     process.exit();
   };
 

@@ -142,67 +142,82 @@ deepfakevideoanalyser/
 
 ## 🚀 Complete Installation & Setup Guide
 
-### 1. Clone or Open the Repository
-```bash
-cd f:\05.Client_project\deepfakevideoanalyser
-```
+### ⚡ Instant One-Click Start (Zero-Configuration)
 
-### 2. Set Up a Python Virtual Environment
+The project includes an automatic bootstrapping engine in `run.js` that detects your OS, creates the virtual environment (`.venv`), installs all Node and Python dependencies, downloads missing VideoMAE model weights (~345MB) from Hugging Face, and launches both frontend and backend.
 
-#### Windows (PowerShell):
-```powershell
-# Create virtual environment (if not already created)
-python -m venv .venv
-
-# Activate virtual environment
-.\.venv\Scripts\Activate.ps1
-```
-
-#### Windows (Command Prompt):
+#### Windows:
+Double-click `start.bat` or run in terminal:
 ```cmd
-.venv\Scripts\activate.bat
+start.bat
 ```
+*(or simply run `npm run dev`)*
 
 #### macOS / Linux:
 ```bash
+chmod +x start.sh
+./start.sh
+```
+*(or simply run `npm run dev`)*
+
+---
+
+### 🛠️ Manual Step-by-Step Setup (Optional)
+
+If you prefer to configure your environment manually:
+
+#### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd deepfakevideoanalyser
+```
+
+#### 2. Install Node.js Frontend Dependencies
+```bash
+npm install
+```
+
+#### 3. Set Up Python Virtual Environment
+
+##### Windows (PowerShell):
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+##### macOS / Linux:
+```bash
+python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Required Dependencies
-
-Install the core application requirements:
+#### 4. Install Python Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
 > **⚡ NVIDIA CUDA GPU Acceleration**:
-> To enable hardware GPU acceleration on Windows or Linux with an NVIDIA GPU, install the CUDA-enabled PyTorch build:
+> To enable hardware GPU acceleration with an NVIDIA GPU, install the CUDA-enabled PyTorch build:
 > ```bash
 > pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 > ```
 
-### 4. Verify Model Weights
-Confirm that `model.safetensors` exists in `models/videomae/`:
-```text
-models/videomae/
-├── config.json
-├── preprocessor_config.json
-├── README.md
-└── model.safetensors    # ~328 MB
-```
+#### 5. Model Weights
+Weights (`model.safetensors`, ~345MB) are automatically downloaded from Hugging Face (`Vansh180/VideoMae-ffc23-deepfake-detector`) into `models/videomae/` on first run of `npm run dev`, `server.py`, or `test_model.py`.
 
 ---
 
 ## 🧪 Testing & Verification
 
-Before starting the web server, run the sanity verification script to ensure PyTorch and Transformers can load the model weights cleanly:
+Run the sanity check script to verify model loading:
 
-```powershell
-.\.venv\Scripts\python.exe test_model.py
+```bash
+python test_model.py
 ```
 
 Expected output:
 ```text
+Verifying model weights...
 Loading processor...
 Loading model...
 Model loaded successfully!
@@ -214,25 +229,25 @@ Labels: {0: 'real', 1: 'fake'}
 
 ## 🏃 Running the Application
 
-### One-Command Quick Start (Frontend + Backend + Auto-Dependency Check)
-
-Run both the FastAPI backend and the Vite frontend with automatic requirement validation in a single command:
+### One-Command Quick Start (Frontend + Backend)
 
 ```bash
 npm run dev
 ```
 
 This single command will:
-1. Verify and automatically install missing Python dependencies (`requirements.txt`).
-2. Verify VideoMAE model configuration and weights (`models/videomae/`).
+1. Verify and automatically install Node and Python dependencies.
+2. Verify / auto-download fine-tuned VideoMAE model weights.
 3. Launch the FastAPI Python Backend on `http://127.0.0.1:8000`.
-4. Launch the Vite Frontend Dev Server on `http://127.0.0.1:5173`.
+4. Launch the Vite Frontend on `http://127.0.0.1:5173`.
 
-### Alternative Individual Commands
-If you wish to run backend and frontend in separate terminals:
-- **Backend Only**: `npm run dev:backend` (or `python -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload`)
+### Access Links
+* **Frontend Web Application**: [http://127.0.0.1:5173/](http://127.0.0.1:5173/)
+* **Backend API & Swagger Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+### Individual Services (Advanced)
+- **Backend Only**: `npm run dev:backend` (or `python server.py`)
 - **Frontend Only**: `npm run dev:frontend` (or `npx vite`)
-- **Install Python Dependencies**: `npm run install:requirements`
 
 ### Accessing the Web Interface
 - **Via Vite Dev Server (Hot-Reloading)**: 👉 **[http://127.0.0.1:5173](http://127.0.0.1:5173)** *(automatically proxies all `/api` calls to the FastAPI backend)*

@@ -17,6 +17,10 @@ def main():
         "cuda" if torch.cuda.is_available() else "cpu"
     )
 
+    print("Verifying model weights...")
+    from server import ensure_model_weights
+    ensure_model_weights()
+
     print("Loading processor...")
     processor = VideoMAEImageProcessor.from_pretrained(
         MODEL_ID
