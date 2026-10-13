@@ -4,6 +4,16 @@ Serves the custom glassmorphic dark-mode web application at `/`
 and exposes the ZeroGPU-accelerated VideoMAE API, with Gradio mounted at `/gradio`.
 """
 
+try:
+    import spaces
+except ImportError:
+    class spaces:
+        @staticmethod
+        def GPU(func=None, **kwargs):
+            if func is None:
+                return lambda f: f
+            return func
+
 import os
 from pathlib import Path
 import gradio as gr
@@ -18,19 +28,6 @@ from server import (
     MODEL_ID,
     NUM_FRAMES,
 )
-
-# ---------------------------------------------------------------------------
-# Hugging Face ZeroGPU compatibility
-# ---------------------------------------------------------------------------
-try:
-    import spaces
-except ImportError:
-    class spaces:
-        @staticmethod
-        def GPU(func=None, **kwargs):
-            if func is None:
-                return lambda f: f
-            return func
 
 
 @spaces.GPU

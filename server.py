@@ -3,6 +3,16 @@ Deepfake Video Forensics — FastAPI Backend
 Handles video upload, frame extraction, and VideoMAE inference.
 """
 
+try:
+    import spaces
+except ImportError:
+    class spaces:
+        @staticmethod
+        def GPU(func=None, **kwargs):
+            if func is None:
+                return lambda f: f
+            return func
+
 import os
 import io
 import base64
@@ -193,15 +203,6 @@ async def health_check():
     }
 
 
-try:
-    import spaces
-except ImportError:
-    class spaces:
-        @staticmethod
-        def GPU(func=None, **kwargs):
-            if func is None:
-                return lambda f: f
-            return func
 
 
 @spaces.GPU
