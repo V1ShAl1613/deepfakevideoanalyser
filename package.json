@@ -4,11 +4,15 @@
   "description": "Deepfake Video Forensics — AI-Powered Media Authenticity & Deepfake Video Analyser",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node run.js",
+    "dev:frontend": "vite",
+    "dev:backend": "python3 -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload",
+    "install:requirements": "python3 -m pip install -r requirements.txt",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "concurrently": "^10.0.6",
     "vite": "^8.3.4"
   }
 }

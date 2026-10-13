@@ -214,23 +214,30 @@ Labels: {0: 'real', 1: 'fake'}
 
 ## 🏃 Running the Application
 
-### Quick Start Commands
+### One-Command Quick Start (Frontend + Backend + Auto-Dependency Check)
 
-#### 1. Start the Backend API (FastAPI)
-In your terminal, start the Python backend:
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn server:app --host 127.0.0.1 --port 8000
-```
+Run both the FastAPI backend and the Vite frontend with automatic requirement validation in a single command:
 
-#### 2. Start the Frontend Dev Server (Vite)
-In another terminal, start the modern Vite frontend with hot-reload and API proxying:
 ```bash
 npm run dev
 ```
 
+This single command will:
+1. Verify and automatically install missing Python dependencies (`requirements.txt`).
+2. Verify VideoMAE model configuration and weights (`models/videomae/`).
+3. Launch the FastAPI Python Backend on `http://127.0.0.1:8000`.
+4. Launch the Vite Frontend Dev Server on `http://127.0.0.1:5173`.
+
+### Alternative Individual Commands
+If you wish to run backend and frontend in separate terminals:
+- **Backend Only**: `npm run dev:backend` (or `python -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload`)
+- **Frontend Only**: `npm run dev:frontend` (or `npx vite`)
+- **Install Python Dependencies**: `npm run install:requirements`
+
 ### Accessing the Web Interface
 - **Via Vite Dev Server (Hot-Reloading)**: 👉 **[http://127.0.0.1:5173](http://127.0.0.1:5173)** *(automatically proxies all `/api` calls to the FastAPI backend)*
 - **Direct via FastAPI Server**: 👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+
 
 ---
 
