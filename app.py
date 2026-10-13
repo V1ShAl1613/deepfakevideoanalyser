@@ -45,9 +45,21 @@ def load_model():
     return _processor, _model, _device
 
 
+try:
+    import spaces
+except ImportError:
+    class spaces:
+        @staticmethod
+        def GPU(func=None, **kwargs):
+            if func is None:
+                return lambda f: f
+            return func
+
+
 # ---------------------------------------------------------------------------
 # Forensic Analysis Function
 # ---------------------------------------------------------------------------
+@spaces.GPU
 def analyze_video(video_path):
     if not video_path:
         return None, "⚠️ Please upload or record a video first.", []
@@ -122,12 +134,6 @@ with gr.Blocks(title="Deepfake Video Forensics") as demo:
             video_input = gr.Video(label="Input Video (Upload or Record)", sources=["upload"])
             analyze_btn = gr.Button("🔍 Run Forensic Analysis", variant="primary", size="lg")
 
-            gr.Examples(
-                examples=["sample_for_test.mp4"] if os.path.exists("sample_for_test.mp4") else [],
-                inputs=video_input,
-                label="Sample Verification Video"
-            )
-
         with gr.Column(scale=1):
             label_output = gr.Label(label="Authenticity Probability", num_top_classes=2)
             report_output = gr.Markdown(value="*Upload a video and click 'Run Forensic Analysis' to inspect temporal artifacts.*")
@@ -149,4 +155,4 @@ with gr.Blocks(title="Deepfake Video Forensics") as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860, theme=theme)
+    demo.launch(theme=theme)
