@@ -147,11 +147,14 @@ deepfakevideoanalyser/
 The project includes an automatic bootstrapping engine in `run.js` that detects your OS, creates the virtual environment (`.venv`), installs all Node and Python dependencies, downloads missing VideoMAE model weights (~345MB) from Hugging Face, and launches both frontend and backend.
 
 #### Windows:
-Double-click `start.bat` or run in terminal:
-```cmd
-start.bat
+Double-click `start.bat` in File Explorer, or run in terminal:
+```powershell
+# In PowerShell:
+.\start.bat
+
+# Or using npm:
+npm run dev
 ```
-*(or simply run `npm run dev`)*
 
 #### macOS / Linux:
 ```bash
