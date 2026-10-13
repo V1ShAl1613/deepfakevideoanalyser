@@ -188,10 +188,20 @@ function initApp() {
     return `${mins}m ${secs}s`;
   }
 
-  // ── 5. Backend Health Check ──
+  // ── 5. Backend Base URL & Health Check ──
+  function getApiBaseUrl() {
+    if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/+$/, '');
+    const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+    if (isLocal) return '';
+    const stored = localStorage.getItem('deepfake_backend_url');
+    if (stored) return stored.replace(/\/+$/, '');
+    return '';
+  }
+
   async function checkHealth() {
     try {
-      const res = await fetch('/api/health');
+      const apiUrl = `${getApiBaseUrl()}/api/health`;
+      const res = await fetch(apiUrl);
       if (res.ok) {
         const data = await res.json();
         const dev = (data.device || 'CPU').toUpperCase();
@@ -396,7 +406,8 @@ function initApp() {
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch('/api/analyze', {
+      const apiUrl = `${getApiBaseUrl()}/api/analyze`;
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       });

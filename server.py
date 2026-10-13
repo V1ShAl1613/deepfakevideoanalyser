@@ -282,14 +282,11 @@ app.mount(
     name="static",
 )
 
-
-@app.get("/")
-async def serve_frontend():
-    """Serve the main HTML page."""
-    return FileResponse(
-        str(FRONTEND_DIR / "index.html"),
-        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
-    )
+app.mount(
+    "/",
+    StaticFiles(directory=str(FRONTEND_DIR), html=True),
+    name="root_frontend",
+)
 
 
 if __name__ == "__main__":
