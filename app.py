@@ -1,7 +1,7 @@
 """
 Deepfake Video Forensics — Hugging Face Space & Production Entrypoint
 Serves the custom glassmorphic dark-mode web application at `/`
-and exposes the ZeroGPU-accelerated VideoMAE API, with Gradio mounted at `/gradio`.
+with ZeroGPU hardware acceleration, powered by VideoMAE Spatio-Temporal Forensics.
 """
 
 try:
@@ -15,19 +15,28 @@ except ImportError:
             return func
 
 import os
+import sys
 from pathlib import Path
 import gradio as gr
-import torch
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.routing import Route
+
+# Ensure local imports resolve
+BASE_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(BASE_DIR))
 
 from server import (
-    app as server_app,
-    mount_static_and_root,
+    analyze_video,
+    health_check,
     run_inference,
     get_model,
     extract_frames,
     MODEL_ID,
     NUM_FRAMES,
 )
+
+FRONTEND_DIR = BASE_DIR / "frontend"
 
 # ---------------------------------------------------------------------------
 # Hugging Face ZeroGPU inference handler
@@ -60,12 +69,12 @@ def predict_video(video_path):
             verdict = f"✅ **AUTHENTIC / REAL MEDIA** ({real_score * 100:.2f}%)"
 
         report = f"""
-### Forensic Verdict
+### Forensic Verdict Report
 {verdict}
 
 * **Inference Device**: `{str(device).upper()}`
 * **Frames Sampled**: `{len(frames)} frames`
-* **Custom Studio**: The full glassmorphic dark-mode interface is live at [/](/)
+* **Custom Studio**: The full interactive dark-mode dashboard is live at [/](/)
         """
         return confidences, report, frames
 
@@ -73,6 +82,9 @@ def predict_video(video_path):
         return None, f"❌ Error: {str(e)}", []
 
 
+# ---------------------------------------------------------------------------
+# Gradio Blocks setup (Satisfies ZeroGPU startup & provides backend API)
+# ---------------------------------------------------------------------------
 with gr.Blocks(title="Deepfake Video Forensics Backend") as demo:
     gr.Markdown(
         """
@@ -96,17 +108,41 @@ with gr.Blocks(title="Deepfake Video Forensics Backend") as demo:
         outputs=[lbl_out, rep_out, gal_out],
     )
 
-# CRITICAL for ZeroGPU: Enable queue so Hugging Face startup scanner binds the GPU worker
+# Enable queue for ZeroGPU event routing
 demo.queue()
 
-# Mount Gradio at /gradio, and serve the custom frontend at root /
-app = gr.mount_gradio_app(server_app, demo, path="/gradio")
-mount_static_and_root(app)
+# ---------------------------------------------------------------------------
+# Mount FastAPI backend endpoints onto Gradio's internal FastAPI app
+# ---------------------------------------------------------------------------
+demo.app.add_api_route("/api/health", health_check, methods=["GET"])
+demo.app.add_api_route("/api/analyze", analyze_video, methods=["POST"])
 
+# Mount static asset routes
+demo.app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="custom_static")
+
+async def serve_index(request):
+    return FileResponse(str(FRONTEND_DIR / "index.html"), headers={"Cache-Control": "no-cache"})
+
+async def serve_css(request):
+    return FileResponse(str(FRONTEND_DIR / "style.css"), headers={"Cache-Control": "no-cache"})
+
+async def serve_js(request):
+    return FileResponse(str(FRONTEND_DIR / "app.js"), headers={"Cache-Control": "no-cache"})
+
+async def serve_robot(request):
+    return FileResponse(str(FRONTEND_DIR / "ai-robot.png"))
+
+# Prepend routes to ensure custom frontend takes priority at /
+demo.app.router.routes.insert(0, Route("/", endpoint=serve_index, methods=["GET"]))
+demo.app.router.routes.insert(1, Route("/style.css", endpoint=serve_css, methods=["GET"]))
+demo.app.router.routes.insert(2, Route("/app.js", endpoint=serve_js, methods=["GET"]))
+demo.app.router.routes.insert(3, Route("/ai-robot.png", endpoint=serve_robot, methods=["GET"]))
+
+# Expose app for ASGI compatibility
+app = demo.app
 
 if __name__ == "__main__":
-    import uvicorn
     port = int(os.environ.get("PORT", 7860))
     host = os.environ.get("HOST", "0.0.0.0")
-    print(f"[app] Launching Deepfake Video Forensics on http://{host}:{port}")
-    uvicorn.run("app:app", host=host, port=port, reload=False)
+    print(f"[app] Launching Deepfake Video Forensics with ZeroGPU on http://{host}:{port}")
+    demo.launch(server_name=host, server_port=port, ssr_mode=False)
