@@ -4,7 +4,7 @@
  * spatiotemporal results interpretation, frame lightbox, and theme persistence.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   // ── 1. DOM Elements ──
   // Header Telemetry
   const engineDot = document.getElementById('engineDot');
@@ -49,6 +49,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const guideModal = document.getElementById('guideModal');
   const btnCloseGuideModal = document.getElementById('btnCloseGuideModal');
+
+  // Landing & Workspace Views Navigation
+  const landingView = document.getElementById('landingView');
+  const workspaceView = document.getElementById('workspaceView');
+  const btnNavHome = document.getElementById('btnNavHome');
+  const btnNavWorkspace = document.getElementById('btnNavWorkspace');
+  const btnHeaderLaunch = document.getElementById('btnHeaderLaunch');
+  const btnHeroLaunch = document.getElementById('btnHeroLaunch');
+  const btnHeroSpecs = document.getElementById('btnHeroSpecs');
+  const btnCtaLaunch = document.getElementById('btnCtaLaunch');
+  const brandHomeLink = document.getElementById('brandHomeLink');
 
   // Toasts
   const toastContainer = document.getElementById('toastContainer');
@@ -119,6 +130,45 @@ document.addEventListener('DOMContentLoaded', () => {
     btnThemeToggle.addEventListener('click', toggleTheme);
   }
   initTheme();
+
+  // ── 3.5. View Switcher Controller (Landing Page vs Forensic Studio) ──
+  function showLanding() {
+    if (!landingView || !workspaceView) return;
+    workspaceView.style.display = 'none';
+    landingView.style.display = 'flex';
+    if (btnNavHome) btnNavHome.classList.add('active');
+    if (btnNavWorkspace) btnNavWorkspace.classList.remove('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showWorkspace() {
+    if (!landingView || !workspaceView) return;
+    landingView.style.display = 'none';
+    workspaceView.style.display = 'block';
+    if (btnNavHome) btnNavHome.classList.remove('active');
+    if (btnNavWorkspace) btnNavWorkspace.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function openGuideModal() {
+    if (guideModal) {
+      guideModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  // Expose to window for inline onclick triggers
+  window.showLanding = showLanding;
+  window.showWorkspace = showWorkspace;
+  window.openGuideModal = openGuideModal;
+
+  if (btnNavHome) btnNavHome.addEventListener('click', showLanding);
+  if (brandHomeLink) brandHomeLink.addEventListener('click', showLanding);
+  if (btnNavWorkspace) btnNavWorkspace.addEventListener('click', showWorkspace);
+  if (btnHeaderLaunch) btnHeaderLaunch.addEventListener('click', showWorkspace);
+  if (btnHeroLaunch) btnHeroLaunch.addEventListener('click', showWorkspace);
+  if (btnCtaLaunch) btnCtaLaunch.addEventListener('click', showWorkspace);
+  if (btnHeroSpecs) btnHeroSpecs.addEventListener('click', openGuideModal);
 
   // ── 4. Formatting Utilities ──
   function formatBytes(bytes, decimals = 1) {
@@ -905,4 +955,11 @@ document.addEventListener('DOMContentLoaded', () => {
       window.print();
     });
   }
-});
+}
+
+// Guarantee execution whether script loads before or after DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}

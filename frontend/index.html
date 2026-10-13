@@ -13,8 +13,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/style.css?v=2.4.0" />
+  <link rel="stylesheet" href="/static/style.css?v=2.6.0" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f46e5'/><path d='M30 25 L75 50 L30 75 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='10' fill='%2310b981'/></svg>" />
+
+  <!-- Instant inline navigation bridge for immediate click responsiveness -->
+  <script>
+    window.showLanding = function() {
+      var lv = document.getElementById('landingView');
+      var wv = document.getElementById('workspaceView');
+      var bHome = document.getElementById('btnNavHome');
+      var bWork = document.getElementById('btnNavWorkspace');
+      if (wv) wv.style.display = 'none';
+      if (lv) lv.style.display = 'flex';
+      if (bHome) bHome.classList.add('active');
+      if (bWork) bWork.classList.remove('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.showWorkspace = function() {
+      var lv = document.getElementById('landingView');
+      var wv = document.getElementById('workspaceView');
+      var bHome = document.getElementById('btnNavHome');
+      var bWork = document.getElementById('btnNavWorkspace');
+      if (lv) lv.style.display = 'none';
+      if (wv) wv.style.display = 'block';
+      if (bHome) bHome.classList.remove('active');
+      if (bWork) bWork.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.openGuideModal = function() {
+      var gm = document.getElementById('guideModal');
+      if (gm) {
+        gm.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    };
+  </script>
 </head>
 <body>
   <!-- Ambient background glow elements -->
@@ -28,7 +63,7 @@
     <header class="app-header" role="banner">
       <div class="header-inner">
         <!-- Brand identity -->
-        <div class="brand-group">
+        <div class="brand-group" id="brandHomeLink" onclick="window.showLanding && window.showLanding()" style="cursor: pointer;" title="Back to Overview">
           <div class="brand-logo" aria-hidden="true">
             <svg class="logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="32" height="32" rx="8" fill="url(#brand-grad)" />
@@ -53,6 +88,22 @@
             <span class="brand-tagline">AI Spatio-Temporal Media Authenticity Verification</span>
           </div>
         </div>
+
+        <!-- Header Navigation Tabs -->
+        <nav class="header-nav-tabs" aria-label="Main Navigation">
+          <button type="button" class="nav-tab-btn active" id="btnNavHome" onclick="window.showLanding && window.showLanding()" title="View Project Overview">
+            <svg class="tab-svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span>Overview</span>
+          </button>
+          <button type="button" class="nav-tab-btn" id="btnNavWorkspace" onclick="window.showWorkspace && window.showWorkspace()" title="Open Forensic Studio">
+            <svg class="tab-svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3 1h10a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            <span>Forensic Studio</span>
+          </button>
+        </nav>
 
         <!-- System Telemetry & Status Badges -->
         <div class="header-telemetry" role="status" aria-live="polite">
@@ -97,13 +148,259 @@
               <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
             </svg>
           </button>
+
+          <button type="button" class="action-btn btn-launch-accent" id="btnHeaderLaunch" onclick="window.showWorkspace && window.showWorkspace()" title="Launch Forensic Studio">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+            </svg>
+            <span class="btn-text-desktop">Studio</span>
+          </button>
         </div>
       </div>
     </header>
 
-    <!-- ── Main Workspace ── -->
+    <!-- ── Main Content Container ── -->
     <main class="main-content" id="mainContent">
-      <div class="workspace-grid">
+
+      <!-- ── Starting Landing Page View ── -->
+      <section class="landing-view" id="landingView">
+        <!-- Hero Card -->
+        <div class="landing-hero-card">
+          <div class="landing-hero-content">
+            <div class="landing-badge-pill">
+              <span class="pulse-indicator-dot"></span>
+              <span class="badge-tag">AI Spatio-Temporal Forensics</span>
+              <span class="badge-sep">•</span>
+              <span class="badge-model">VideoMAE Transformer</span>
+            </div>
+
+            <h1 class="landing-hero-title">
+              Detect Deepfake Media with <span class="gradient-text">Spatiotemporal Precision</span>
+            </h1>
+
+            <p class="landing-hero-desc">
+              State-of-the-art AI authenticity verification platform powered by 3D Spatio-Temporal Masked Autoencoders fine-tuned on FaceForensics++. Analyzes cross-frame temporal motion anomalies, boundary glitches, and generative reenactment signatures with 100% local, air-gapped security.
+            </p>
+
+            <div class="landing-hero-actions">
+              <button type="button" class="btn-hero-primary" id="btnHeroLaunch" onclick="window.showWorkspace && window.showWorkspace()">
+                <span>Launch Forensic Workspace</span>
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+
+              <button type="button" class="btn-hero-secondary" id="btnHeroSpecs" onclick="window.openGuideModal && window.openGuideModal()">
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                <span>Architecture & Specs</span>
+              </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="landing-stats-bar">
+              <div class="landing-stat-item">
+                <span class="landing-stat-value">88.0%</span>
+                <span class="landing-stat-label">FF++ Validation Accuracy</span>
+              </div>
+              <div class="stat-vert-divider"></div>
+              <div class="landing-stat-item">
+                <span class="landing-stat-value">16 Frames</span>
+                <span class="landing-stat-label">Uniform Spatio-Temporal Sampling</span>
+              </div>
+              <div class="stat-vert-divider"></div>
+              <div class="landing-stat-item">
+                <span class="landing-stat-value">0.836</span>
+                <span class="landing-stat-label">Area Under Curve (AUC)</span>
+              </div>
+              <div class="stat-vert-divider"></div>
+              <div class="landing-stat-item">
+                <span class="landing-stat-value">Air-Gapped</span>
+                <span class="landing-stat-label">Zero Cloud Data Egress</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Visual Showcase -->
+          <div class="landing-hero-visual">
+            <div class="hero-robo-display">
+              <!-- Top status header -->
+              <div class="robo-card-top-header">
+                <div class="robo-agent-status-tag">
+                  <span class="status-indicator-dot online"></span>
+                  <span class="agent-tag-name">NEURAL FORENSIC AGENT</span>
+                </div>
+                <span class="agent-version-pill">v1.0 AI</span>
+              </div>
+
+              <!-- High-Tech Holographic Stage -->
+              <div class="hero-hologram-stage">
+                <div class="hologram-radial-aura" aria-hidden="true"></div>
+                <div class="hologram-grid-lines" aria-hidden="true"></div>
+                
+                <span class="stage-corner tl" aria-hidden="true"></span>
+                <span class="stage-corner tr" aria-hidden="true"></span>
+                <span class="stage-corner bl" aria-hidden="true"></span>
+                <span class="stage-corner br" aria-hidden="true"></span>
+
+                <div class="hologram-laser-beam" aria-hidden="true"></div>
+
+                <div class="robo-img-wrapper">
+                  <img src="/static/ai-robot.png" alt="Forensic AI Agent" class="hero-robo-img" />
+                  <div class="hologram-pedestal-disc" aria-hidden="true"></div>
+                </div>
+              </div>
+
+              <!-- Telemetry & Spectrum Visualizer -->
+              <div class="hero-visual-telemetry">
+                <div class="telemetry-chip-row">
+                  <span class="telemetry-chip chip-active">
+                    <span class="pulse-indicator-dot"></span>
+                    VideoMAE Engine Ready
+                  </span>
+                  <span class="telemetry-chip">16-Frame Tensor</span>
+                </div>
+
+                <div class="hero-waveform-bar" aria-hidden="true">
+                  <div class="wave-bar w1"></div>
+                  <div class="wave-bar w2"></div>
+                  <div class="wave-bar w3"></div>
+                  <div class="wave-bar w4"></div>
+                  <div class="wave-bar w5"></div>
+                  <div class="wave-bar w6"></div>
+                  <div class="wave-bar w7"></div>
+                  <div class="wave-bar w8"></div>
+                  <div class="wave-bar w9"></div>
+                  <div class="wave-bar w10"></div>
+                  <div class="wave-bar w11"></div>
+                  <div class="wave-bar w12"></div>
+                </div>
+
+                <span class="hero-visual-caption">Real-Time Spatio-Temporal Inspection Agent</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Core Capabilities Section -->
+        <section class="landing-section">
+          <div class="landing-section-header">
+            <span class="section-tag-pill">Core Capabilities</span>
+            <h2 class="landing-section-heading">Engineered for Media Authenticity & Security</h2>
+            <p class="landing-section-sub">
+              Combining 3D temporal transformer networks with mathematical calibration to uncover synthetic manipulation invisible to human scrutiny.
+            </p>
+          </div>
+
+          <div class="capabilities-grid">
+            <div class="capability-card">
+              <div class="cap-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </div>
+              <h3 class="cap-title">3D Spatio-Temporal Attention</h3>
+              <p class="cap-desc">
+                Processes video clips as volumetric 3D spacetime tubes across 16 uniformly sampled frames, exposing cross-frame blinking glitches, boundary jitter, and temporal reenactment flaws.
+              </p>
+            </div>
+
+            <div class="capability-card">
+              <div class="cap-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <h3 class="cap-title">100% Air-Gapped Privacy</h3>
+              <p class="cap-desc">
+                All video decoding, frame extraction, and PyTorch transformer inference run entirely in local workstation memory. Confidential evidence never touches external clouds or third-party APIs.
+              </p>
+            </div>
+
+            <div class="capability-card">
+              <div class="cap-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+              </div>
+              <h3 class="cap-title">Calibrated Evidence Dossier</h3>
+              <p class="cap-desc">
+                Generates actionable forensic verdicts with authentic vs manipulated probability distribution gauges, 16-frame visual filmstrips, temporal density metrics, and audit documentation.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pipeline / How it Works Section -->
+        <section class="landing-section">
+          <div class="landing-section-header">
+            <span class="section-tag-pill">Forensic Pipeline</span>
+            <h2 class="landing-section-heading">Four-Stage Spatio-Temporal Inspection</h2>
+            <p class="landing-section-sub">
+              From ingestion to cryptographic confidence scores, every frame undergoes rigorous spatio-temporal validation.
+            </p>
+          </div>
+
+          <div class="pipeline-steps-grid">
+            <div class="pipeline-step-card">
+              <span class="step-num-badge">01. INGESTION</span>
+              <h4 class="step-title">Video Ingestion</h4>
+              <p class="step-desc">
+                Securely drop MP4, MOV, or WebM media up to 250 MB into the workstation for client-side validation and metadata extraction.
+              </p>
+            </div>
+
+            <div class="pipeline-step-card">
+              <span class="step-num-badge">02. SAMPLING</span>
+              <h4 class="step-title">16-Frame Sampling</h4>
+              <p class="step-desc">
+                OpenCV decodes the timeline into 16 equidistant keyframes to capture full temporal progression and motion dynamics.
+              </p>
+            </div>
+
+            <div class="pipeline-step-card">
+              <span class="step-num-badge">03. INFERENCE</span>
+              <h4 class="step-title">VideoMAE Analysis</h4>
+              <p class="step-desc">
+                12-layer Vision Transformer computes cross-frame spatio-temporal attention tokens to isolate generative artifacts.
+              </p>
+            </div>
+
+            <div class="pipeline-step-card">
+              <span class="step-num-badge">04. REPORTING</span>
+              <h4 class="step-title">Forensic Dossier</h4>
+              <p class="step-desc">
+                Review calibrated authenticity scores, horizontal frame reel, executive summary, and exportable findings.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA Launch Banner -->
+        <div class="landing-cta-banner">
+          <div class="cta-banner-content">
+            <h3 class="cta-banner-title">Ready to Begin Forensic Verification?</h3>
+            <p class="cta-banner-desc">
+              Launch the forensic workspace to analyze your video footage with real-time frame extraction and deep learning inspection.
+            </p>
+          </div>
+          <button type="button" class="btn-cta-banner-launch" id="btnCtaLaunch" onclick="window.showWorkspace && window.showWorkspace()">
+            <span>Start Video Analysis</span>
+            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Forensic Studio Workspace View (Hidden initially until user clicks) ── -->
+      <section class="workspace-view" id="workspaceView" style="display: none;">
+        <div class="workspace-grid">
 
         <!-- ── Left Column: Video Ingestion & Inspection Preview ── -->
         <section class="workspace-card ingestion-panel" aria-labelledby="ingestionHeading">
@@ -332,6 +629,8 @@
         </div>
       </section>
 
+      </section>
+
     </main>
 
     <!-- ── App Footer ── -->
@@ -470,6 +769,6 @@
   <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Interactive Application Controller -->
-  <script src="/static/app.js?v=2.4.0"></script>
+  <script src="/static/app.js?v=2.6.0"></script>
 </body>
 </html>
