@@ -1,50 +1,27 @@
 """
-Deepfake Video Forensics — Hugging Face Gradio Space (100% Free Tier Compatible)
-Integrates VideoMAE Spatio-Temporal classification with interactive forensic analysis.
+Deepfake Video Forensics — Hugging Face Space & Production Entrypoint
+Serves the custom glassmorphic dark-mode web application at `/`
+and exposes the ZeroGPU-accelerated VideoMAE API, with Gradio mounted at `/gradio`.
 """
 
 import os
 from pathlib import Path
-import cv2
-import numpy as np
-import torch
-from PIL import Image
 import gradio as gr
-from transformers import (
-    VideoMAEForVideoClassification,
-    VideoMAEImageProcessor,
+import torch
+
+from server import (
+    app as server_app,
+    mount_static_and_root,
+    run_inference,
+    get_model,
+    extract_frames,
+    MODEL_ID,
+    NUM_FRAMES,
 )
 
-from server import ensure_model_weights, MODEL_ID, NUM_FRAMES, extract_frames
-
 # ---------------------------------------------------------------------------
-# Global model cache
+# Hugging Face ZeroGPU compatibility
 # ---------------------------------------------------------------------------
-_model = None
-_processor = None
-_device = None
-
-
-def load_model():
-    global _model, _processor, _device
-    if _model is None:
-        print("[setup] Initializing VideoMAE model...")
-        ensure_model_weights()
-        _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        _processor = VideoMAEImageProcessor.from_pretrained(
-            MODEL_ID,
-            local_files_only=True,
-        )
-        _model = VideoMAEForVideoClassification.from_pretrained(
-            MODEL_ID,
-            local_files_only=True,
-        )
-        _model.to(_device)
-        _model.eval()
-        print(f"[setup] VideoMAE model loaded on {_device}.")
-    return _processor, _model, _device
-
-
 try:
     import spaces
 except ImportError:
@@ -56,30 +33,29 @@ except ImportError:
             return func
 
 
+@spaces.GPU
+def hf_zerogpu_forward(processor, model, device, frames):
+    """ZeroGPU forward pass runner recognized by Hugging Face startup checks."""
+    return run_inference(processor, model, device, frames)
+
+
 # ---------------------------------------------------------------------------
-# Forensic Analysis Function
+# Optional Gradio interface (accessible at /gradio)
 # ---------------------------------------------------------------------------
 @spaces.GPU
-def analyze_video(video_path):
+def gradio_analyze_video(video_path):
+    """Companion Gradio analysis endpoint."""
     if not video_path:
-        return None, "⚠️ Please upload or record a video first.", []
+        return None, "⚠️ Please upload a video first.", []
 
     try:
-        processor, model, device = load_model()
-
-        # Extract 16 frames
+        processor, model, device = get_model()
         frames = extract_frames(video_path)
         if not frames:
-            return None, "❌ Could not extract readable frames from this video.", []
+            return None, "❌ Could not extract readable frames.", []
 
-        inputs = processor(frames, return_tensors="pt")
-        inputs = {key: value.to(device) for key, value in inputs.items()}
+        probabilities = hf_zerogpu_forward(processor, model, device, frames)
 
-        with torch.inference_mode():
-            outputs = model(**inputs)
-            probabilities = torch.softmax(outputs.logits, dim=-1)[0]
-
-        # Results mapping
         confidences = {}
         for idx, score in enumerate(probabilities.tolist()):
             label = model.config.id2label.get(idx, f"Class {idx}").upper()
@@ -88,71 +64,59 @@ def analyze_video(video_path):
         fake_score = confidences.get("FAKE", 0.0)
         real_score = confidences.get("REAL", 0.0)
 
-        # Verdict summary
         if fake_score >= 0.5:
-            verdict = f"🚨 **SYNTHETIC / DEEPFAKE DETECTED**\n\n**Confidence**: `{fake_score * 100:.2f}%`\n\n**Forensic Observation**: Temporal motion anomalies and facial artifact signatures detected across {len(frames)} analyzed frames."
+            verdict = f"🚨 **SYNTHETIC / DEEPFAKE DETECTED** ({fake_score * 100:.2f}%)"
         else:
-            verdict = f"✅ **AUTHENTIC / REAL MEDIA**\n\n**Confidence**: `{real_score * 100:.2f}%`\n\n**Forensic Observation**: Consistent temporal motion and skin texture coherence verified across {len(frames)} analyzed frames."
+            verdict = f"✅ **AUTHENTIC / REAL MEDIA** ({real_score * 100:.2f}%)"
 
-        verdict_md = f"""
-### Forensic Verdict Report
+        report = f"""
+### Forensic Verdict
 {verdict}
 
 * **Inference Device**: `{str(device).upper()}`
-* **Timeline Frames Sampled**: `{len(frames)} frames`
-* **Architecture**: `VideoMAE Transformer (FaceForensics++ fine-tuned)`
+* **Frames Sampled**: `{len(frames)} frames`
+* **Full Studio UI**: Visit the root page [/](/) for the full interactive dark-mode dashboard.
         """
-
-        return confidences, verdict_md, frames
+        return confidences, report, frames
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return None, f"❌ Analysis Error: {str(e)}", []
+        return None, f"❌ Error: {str(e)}", []
 
-
-# ---------------------------------------------------------------------------
-# Gradio Interface Setup
-# ---------------------------------------------------------------------------
-theme = gr.themes.Soft(
-    primary_hue="indigo",
-    secondary_hue="purple",
-    neutral_hue="slate",
-)
 
 with gr.Blocks(title="Deepfake Video Forensics") as demo:
     gr.Markdown(
         """
-        # 🛡️ Deepfake Video Forensics
-        ### Spatio-Temporal VideoMAE Media Authenticity & Deepfake Video Analyser
-        Upload any video (**MP4, MOV, WebM**) to run 16-frame spatiotemporal deepfake detection powered by fine-tuned **VideoMAE**.
+        # 🛡️ Deepfake Video Forensics — Engine Backend
+        > **Note:** The full custom glassmorphic application is running at **[Root (/)](/)**.
         """
     )
-
     with gr.Row():
-        with gr.Column(scale=1):
-            video_input = gr.Video(label="Input Video (Upload or Record)", sources=["upload"])
-            analyze_btn = gr.Button("🔍 Run Forensic Analysis", variant="primary", size="lg")
-
-        with gr.Column(scale=1):
-            label_output = gr.Label(label="Authenticity Probability", num_top_classes=2)
-            report_output = gr.Markdown(value="*Upload a video and click 'Run Forensic Analysis' to inspect temporal artifacts.*")
-
+        with gr.Column():
+            video_in = gr.Video(label="Input Video", sources=["upload"])
+            btn_run = gr.Button("🔍 Run Forensic Check", variant="primary")
+        with gr.Column():
+            lbl_out = gr.Label(label="Authenticity Probability", num_top_classes=2)
+            rep_out = gr.Markdown()
     with gr.Row():
-        gallery_output = gr.Gallery(
-            label="16 Sampled Timeline Tubelet Frames",
-            show_label=True,
-            columns=8,
-            rows=2,
-            height=260,
-            object_fit="contain",
-        )
+        gal_out = gr.Gallery(label="Sampled Timeline Frames", columns=8, rows=2, height=240)
 
-    analyze_btn.click(
-        fn=analyze_video,
-        inputs=[video_input],
-        outputs=[label_output, report_output, gallery_output],
+    btn_run.click(
+        fn=gradio_analyze_video,
+        inputs=[video_in],
+        outputs=[lbl_out, rep_out, gal_out],
     )
 
+
+# ---------------------------------------------------------------------------
+# Mount Gradio at /gradio, and serve the custom frontend at root /
+# ---------------------------------------------------------------------------
+app = gr.mount_gradio_app(server_app, demo, path="/gradio")
+mount_static_and_root(app)
+
+
 if __name__ == "__main__":
-    demo.launch(theme=theme)
+    import uvicorn
+    port = int(os.environ.get("PORT", 7860))
+    host = os.environ.get("HOST", "0.0.0.0")
+    print(f"[app] Launching Deepfake Video Forensics on http://{host}:{port}")
+    uvicorn.run("app:app", host=host, port=port, reload=False)

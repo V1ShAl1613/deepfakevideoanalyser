@@ -193,6 +193,28 @@ async def health_check():
     }
 
 
+try:
+    import spaces
+except ImportError:
+    class spaces:
+        @staticmethod
+        def GPU(func=None, **kwargs):
+            if func is None:
+                return lambda f: f
+            return func
+
+
+@spaces.GPU
+def run_inference(processor, model, device, frames):
+    """Run model forward pass on GPU when available."""
+    inputs = processor(frames, return_tensors="pt")
+    inputs = {key: value.to(device) for key, value in inputs.items()}
+    with torch.inference_mode():
+        outputs = model(**inputs)
+        probabilities = torch.softmax(outputs.logits, dim=-1)[0]
+    return probabilities
+
+
 @app.post("/api/analyze")
 async def analyze_video(file: UploadFile = File(...)):
     """Upload a video and get deepfake classification results."""
@@ -218,18 +240,7 @@ async def analyze_video(file: UploadFile = File(...)):
         # Load model and run inference
         processor, model, device = get_model()
         frames = extract_frames(temp_path)
-
-        inputs = processor(frames, return_tensors="pt")
-        inputs = {
-            key: value.to(device)
-            for key, value in inputs.items()
-        }
-
-        with torch.inference_mode():
-            outputs = model(**inputs)
-            probabilities = torch.softmax(
-                outputs.logits, dim=-1
-            )[0]
+        probabilities = run_inference(processor, model, device, frames)
 
         # Build results
         results = []
@@ -281,31 +292,46 @@ async def analyze_video(file: UploadFile = File(...)):
 # Serve frontend & static assets (with no-cache headers for instant updates)
 # ---------------------------------------------------------------------------
 
+FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
 DIST_DIR = Path(__file__).resolve().parent / "dist"
-FRONTEND_DIR = DIST_DIR if DIST_DIR.exists() else Path(__file__).resolve().parent / "frontend"
 
 
 @app.middleware("http")
 async def add_cache_control_header(request, call_next):
     response = await call_next(request)
-    if request.url.path.startswith("/static") or request.url.path == "/":
+    if request.url.path.startswith("/static") or request.url.path == "/" or request.url.path.endswith((".js", ".css", ".html")):
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     return response
 
 
-app.mount(
-    "/static",
-    StaticFiles(directory=str(FRONTEND_DIR)),
-    name="static",
-)
+def mount_static_and_root(target_app=app):
+    """Mount frontend static files and root fallback, placing them at the end of routes."""
+    target_app.router.routes = [
+        r for r in target_app.router.routes
+        if getattr(r, "name", None) not in ("root_frontend", "static", "assets")
+    ]
+    target_app.mount(
+        "/static",
+        StaticFiles(directory=str(FRONTEND_DIR)),
+        name="static",
+    )
+    if DIST_DIR.exists() and (DIST_DIR / "assets").exists():
+        target_app.mount(
+            "/assets",
+            StaticFiles(directory=str(DIST_DIR / "assets")),
+            name="assets",
+        )
+    target_app.mount(
+        "/",
+        StaticFiles(directory=str(FRONTEND_DIR), html=True),
+        name="root_frontend",
+    )
+    return target_app
 
-app.mount(
-    "/",
-    StaticFiles(directory=str(FRONTEND_DIR), html=True),
-    name="root_frontend",
-)
+
+mount_static_and_root(app)
 
 
 if __name__ == "__main__":
