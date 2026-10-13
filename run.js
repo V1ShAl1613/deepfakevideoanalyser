@@ -170,8 +170,8 @@ function start() {
   const viteBin = path.join(__dirname, 'node_modules', '.bin', process.platform === 'win32' ? 'vite.cmd' : 'vite');
   const frontend = spawn(viteBin, [], {
     cwd: __dirname,
-    shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
+    shell: true,
   });
 
   frontend.stdout.on('data', (data) => {
@@ -188,6 +188,8 @@ function start() {
       if (process.platform === 'win32') {
         if (backend.pid) execSync(`taskkill /F /T /PID ${backend.pid}`, { stdio: 'ignore' });
         if (frontend.pid) execSync(`taskkill /F /T /PID ${frontend.pid}`, { stdio: 'ignore' });
+        freePort(8000);
+        freePort(5173);
       } else {
         backend.kill();
         frontend.kill();
