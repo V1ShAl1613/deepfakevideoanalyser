@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large model weights (use GitHub Releases or direct download)
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor files
+.vscode/
+.idea/
+
+# Node / Frontend dependencies
+node_modules/
+dist/
+.vite/
