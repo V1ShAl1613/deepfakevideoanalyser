@@ -29,21 +29,14 @@ from server import (
     NUM_FRAMES,
 )
 
-
-@spaces.GPU
-def hf_zerogpu_forward(processor, model, device, frames):
-    """ZeroGPU forward pass runner recognized by Hugging Face startup checks."""
-    return run_inference(processor, model, device, frames)
-
-
 # ---------------------------------------------------------------------------
-# Optional Gradio interface (accessible at /gradio)
+# Hugging Face ZeroGPU inference handler
 # ---------------------------------------------------------------------------
-@spaces.GPU
-def gradio_analyze_video(video_path):
-    """Companion Gradio analysis endpoint."""
+@spaces.GPU(duration=120)
+def predict_video(video_path):
+    """ZeroGPU inference handler connected directly to Gradio queue."""
     if not video_path:
-        return None, "⚠️ Please upload a video first.", []
+        return None, "⚠️ Please upload or record a video first.", []
 
     try:
         processor, model, device = get_model()
@@ -51,7 +44,7 @@ def gradio_analyze_video(video_path):
         if not frames:
             return None, "❌ Could not extract readable frames.", []
 
-        probabilities = hf_zerogpu_forward(processor, model, device, frames)
+        probabilities = run_inference(processor, model, device, frames)
 
         confidences = {}
         for idx, score in enumerate(probabilities.tolist()):
@@ -72,7 +65,7 @@ def gradio_analyze_video(video_path):
 
 * **Inference Device**: `{str(device).upper()}`
 * **Frames Sampled**: `{len(frames)} frames`
-* **Full Studio UI**: Visit the root page [/](/) for the full interactive dark-mode dashboard.
+* **Custom Studio**: The full glassmorphic dark-mode interface is live at [/](/)
         """
         return confidences, report, frames
 
@@ -80,11 +73,11 @@ def gradio_analyze_video(video_path):
         return None, f"❌ Error: {str(e)}", []
 
 
-with gr.Blocks(title="Deepfake Video Forensics") as demo:
+with gr.Blocks(title="Deepfake Video Forensics Backend") as demo:
     gr.Markdown(
         """
         # 🛡️ Deepfake Video Forensics — Engine Backend
-        > **Note:** The full custom glassmorphic application is running at **[Root (/)](/)**.
+        > **Primary Interface:** The full custom glassmorphic dashboard is actively served at **[Root Studio (/)](/)**.
         """
     )
     with gr.Row():
@@ -98,15 +91,15 @@ with gr.Blocks(title="Deepfake Video Forensics") as demo:
         gal_out = gr.Gallery(label="Sampled Timeline Frames", columns=8, rows=2, height=240)
 
     btn_run.click(
-        fn=gradio_analyze_video,
+        fn=predict_video,
         inputs=[video_in],
         outputs=[lbl_out, rep_out, gal_out],
     )
 
+# CRITICAL for ZeroGPU: Enable queue so Hugging Face startup scanner binds the GPU worker
+demo.queue()
 
-# ---------------------------------------------------------------------------
 # Mount Gradio at /gradio, and serve the custom frontend at root /
-# ---------------------------------------------------------------------------
 app = gr.mount_gradio_app(server_app, demo, path="/gradio")
 mount_static_and_root(app)
 
