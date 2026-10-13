@@ -1,0 +1,12 @@
+.git
+.github
+.venv
+__pycache__
+*.py[cod]
+*$py.class
+node_modules
+dist
+.vite
+.DS_Store
+Thumbs.db
+*.log

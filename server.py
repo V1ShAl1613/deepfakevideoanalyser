@@ -281,7 +281,8 @@ async def analyze_video(file: UploadFile = File(...)):
 # Serve frontend & static assets (with no-cache headers for instant updates)
 # ---------------------------------------------------------------------------
 
-FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
+DIST_DIR = Path(__file__).resolve().parent / "dist"
+FRONTEND_DIR = DIST_DIR if DIST_DIR.exists() else Path(__file__).resolve().parent / "frontend"
 
 
 @app.middleware("http")
@@ -309,6 +310,8 @@ app.mount(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    host = os.environ.get("HOST", "127.0.0.1")
+    uvicorn.run("server:app", host=host, port=port, reload=True)
 
 

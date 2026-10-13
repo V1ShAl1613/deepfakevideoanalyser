@@ -1,3 +1,13 @@
+---
+title: Deepfake Video Forensics
+emoji: 🛡️
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Deepfake Video Forensics — Video Analyser
 
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
